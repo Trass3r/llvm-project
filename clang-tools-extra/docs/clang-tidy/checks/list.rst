@@ -264,6 +264,7 @@ Clang-Tidy Checks
    `readability-implicit-bool-conversion <readability-implicit-bool-conversion.html>`_, "Yes"
    `readability-inconsistent-declaration-parameter-name <readability-inconsistent-declaration-parameter-name.html>`_, "Yes"
    `readability-isolate-declaration <readability-isolate-declaration.html>`_, "Yes"
+   `readability-localizing-variables <readability-localizing-variables.html>`_, "Yes"
    `readability-magic-numbers <readability-magic-numbers.html>`_,
    `readability-make-member-function-const <readability-make-member-function-const.html>`_, "Yes"
    `readability-misleading-indentation <readability-misleading-indentation.html>`_,
