@@ -414,7 +414,7 @@ if( MSVC )
     append("/WX" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
   endif (LLVM_ENABLE_WERROR)
 
-  append("/Zc:inline" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  append("/Zc:inline /permissive- /Zc:__cplusplus" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
 
   # Allow users to request PDBs in release mode. CMake offeres the
   # RelWithDebInfo configuration, but it uses different optimization settings
