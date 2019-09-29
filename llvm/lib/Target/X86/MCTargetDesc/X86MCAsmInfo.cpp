@@ -25,7 +25,7 @@ enum AsmWriterFlavorTy {
 };
 
 static cl::opt<AsmWriterFlavorTy> X86AsmSyntax(
-    "x86-asm-syntax", cl::init(ATT), cl::Hidden,
+    "x86-asm-syntax", cl::init(Intel), cl::Hidden,
     cl::desc("Select the assembly style for input"),
     cl::values(clEnumValN(ATT, "att", "Emit AT&T-style assembly"),
                clEnumValN(Intel, "intel", "Emit Intel-style assembly")));
