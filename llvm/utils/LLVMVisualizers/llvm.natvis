@@ -304,4 +304,111 @@ For later versions of Visual Studio, no setup is required.
       <Item Name="Context">Context</Item>
     </Expand>
   </Type>
+
+  <Type Name="llvm::ConstantSDNode">
+    <DisplayString>$(Type) {*Value}</DisplayString>
+  </Type>
+
+  <Type Name="llvm::SDNode">
+    <DisplayString>$(Type) {getOperationName(nullptr)}</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>NumOperands</Size>
+        <ValuePointer>OperandList</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::ConstantInt">
+    <DisplayString>i{Val.BitWidth} {Val.VAL}</DisplayString>
+  </Type>
+
+  <Type Name="llvm::IntegerType">
+    <DisplayString>{IDAndSubclassData >> 8}bit integer type</DisplayString>
+  </Type>
+
+  <Type Name="llvm::Value">
+    <DisplayString Condition="HasName">$(Type) {*VTy} {this->getName()} {SubclassData}</DisplayString>
+    <DisplayString Condition="!HasName">$(Type) {*VTy} anon {SubclassData}</DisplayString>
+    <Expand>
+      <Item Name="[Inst]" Condition="SubclassID > InstructionVal">(Instruction*)this</Item>
+      <Item Name="Operands">(User*)this</Item>
+      <LinkedListItems>
+        <HeadPointer>UseList</HeadPointer>
+        <NextPointer>Next</NextPointer>
+        <ValueNode>Prev.Value &amp; 3 == 3 ? (User*)(this + 1) : (User*)(this + 2)</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::Use">
+    <Expand>
+      <Item Name="Value">Val</Item>
+      <!-- - ->
+      <LinkedListItems>
+        <HeadPointer>this</HeadPointer>
+        <NextPointer>Next</NextPointer>
+        <ValueNode>Prev.Value &amp; 3 == 3 ? (User*)(this + 1) : (User*)(this + 2)</ValueNode>
+      </LinkedListItems>
+      <!- - -->
+    </Expand>
+  </Type>
+
+  <!-- uses other values, like Operands -->
+  <Type Name="llvm::User">
+    <DisplayString Condition="HasName">$(Type) {*VTy} {this->getName()} {SubclassData}</DisplayString>
+    <DisplayString Condition="!HasName">$(Type) {*VTy} anon {SubclassData}</DisplayString>
+    <Expand>
+      <Item Name="[Value]">(Value*)this,nd</Item>
+      <Item Name="[Type]">*VTy</Item>
+      <ArrayItems Condition="!HasHungOffUses">
+        <Size>NumUserOperands</Size>
+        <ValuePointer>(llvm::Use*)this - NumUserOperands</ValuePointer>
+      </ArrayItems>
+      <ArrayItems Condition="HasHungOffUses">
+        <Size>NumUserOperands</Size>
+        <ValuePointer>*((llvm::Use**)this - 1)</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::Instruction">
+    <DisplayString>{getOpcodeName(SubclassID - InstructionVal)}</DisplayString>
+    <Expand>
+      <Item Name="[User]">(User*)this,nd</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::APInt">
+    <DisplayString>APInt{BitWidth}({U.VAL})</DisplayString>
+  </Type>
+
+  <Type Name="llvm::GlobalValue">
+    <DisplayString>{this->getName()} {(LinkageTypes)Linkage} {(VisibilityTypes)Visibility} {(DLLStorageClassTypes)DllStorageClass} {(llvm::GlobalValue::ThreadLocalMode) ThreadLocal}</DisplayString>
+  </Type>
+
+  <!-- TODO doesn't work cause it doesn't know the dynamic type -->
+  <Type Name="llvm::ilist_node">
+    <Expand>
+      <LinkedListItems>
+        <HeadPointer>this</HeadPointer>
+        <NextPointer>Next</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::LLVMContext">
+    <Expand>
+      <ExpandedItem>pImpl</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <Type Name="llvm::Module">
+    <DisplayString>{ModuleID,s8} {TargetTriple}</DisplayString>
+  </Type>
+
+  <Type Name="llvm::Pass">
+    <DisplayString>$(Type) {PassID} {Kind}</DisplayString>
+  </Type>
 </AutoVisualizer>
