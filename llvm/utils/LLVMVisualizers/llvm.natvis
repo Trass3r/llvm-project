@@ -37,8 +37,8 @@ For later versions of Visual Studio, no setup is required.
     <DisplayString>Cannot visualize APInts longer than 64 bits</DisplayString>
   </Type>
   <Type Name="llvm::ArrayRef&lt;*&gt;">
-    <DisplayString Condition="Length == 0">empty</DisplayString>
-    <DisplayString Condition="Length != 0">{{ size={Length} }}</DisplayString>
+    <DisplayString Condition="Length &lt; 4">{Data,[Length]}</DisplayString>
+    <DisplayString Condition="Length &gt; 3">{Length} elements</DisplayString>
     <Expand>
       <Item Name="[size]">Length</Item>
       <ArrayItems>
@@ -48,7 +48,7 @@ For later versions of Visual Studio, no setup is required.
     </Expand>
   </Type>
   <Type Name="llvm::SmallString&lt;*&gt;">
-    <DisplayString>{(const char*)BeginX,[Size] na}</DisplayString>
+    <DisplayString>{(const char*)BeginX,[Size]s8}</DisplayString>
     <StringView>(const char*)BeginX,[Size]</StringView>
     <Expand>
       <Item Name="[size]">Size</Item>
@@ -61,12 +61,12 @@ For later versions of Visual Studio, no setup is required.
   </Type>
 
   <Type Name="StringView">
-    <DisplayString>{First,[Last - First]s}</DisplayString>
+    <DisplayString>{First,[Last - First]s8}</DisplayString>
   </Type>
   
   <Type Name="llvm::StringRef">
-    <DisplayString>{Data,[Length]s}</DisplayString>
-    <StringView>Data,[Length]s</StringView>
+    <DisplayString>{Data,[Length]s8}</DisplayString>
+    <StringView>Data,[Length]s8</StringView>
     <Expand>
       <Item Name="[size]">Length</Item>
       <ArrayItems>
@@ -184,7 +184,7 @@ For later versions of Visual Studio, no setup is required.
 
   <Type Name="llvm::StringMapEntry&lt;*&gt;">
     <DisplayString Condition="StrLen == 0">empty</DisplayString>
-    <DisplayString Condition="StrLen != 0">({this+1,s}, {second})</DisplayString>
+    <DisplayString Condition="StrLen != 0">({this+1,s8}, {second})</DisplayString>
     <Expand>
       <Item Name="[key]">this+1,s</Item>
       <Item Name="[value]" Condition="StrLen != 0">second</Item>
