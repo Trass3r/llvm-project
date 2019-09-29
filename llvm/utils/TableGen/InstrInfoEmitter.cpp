@@ -831,7 +831,7 @@ void InstrInfoEmitter::emitEnums(raw_ostream &OS) {
     PrintFatalError("No instructions defined!");
 
   OS << "namespace " << Namespace << " {\n";
-  OS << "  enum {\n";
+  OS << "  enum InstrInfo {\n";
   unsigned Num = 0;
   for (const CodeGenInstruction *Inst : Target.getInstructionsByEnumValue())
     OS << "    " << Inst->TheDef->getName() << "\t= " << Num++ << ",\n";
@@ -846,7 +846,7 @@ void InstrInfoEmitter::emitEnums(raw_ostream &OS) {
   OS << "namespace llvm {\n\n";
   OS << "namespace " << Namespace << " {\n";
   OS << "namespace Sched {\n";
-  OS << "  enum {\n";
+  OS << "  enum InstrInfoSched {\n";
   Num = 0;
   for (const auto &Class : SchedModels.explicit_classes())
     OS << "    " << Class.Name << "\t= " << Num++ << ",\n";
