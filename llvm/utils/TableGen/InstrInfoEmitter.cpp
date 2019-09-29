@@ -1231,7 +1231,7 @@ void InstrInfoEmitter::emitEnums(
 
   OS << "namespace llvm::" << Namespace << " {\n";
 
-  OS << "  enum {\n";
+  OS << "  enum InstrInfo {\n";
   for (const CodeGenInstruction *Inst : NumberedInstructions)
     OS << "    " << Inst->TheDef->getName()
        << "\t= " << Target.getInstrIntValue(Inst->TheDef) << ",\n";
@@ -1243,7 +1243,7 @@ void InstrInfoEmitter::emitEnums(
   OS << "#ifdef GET_INSTRINFO_SCHED_ENUM\n";
   OS << "#undef GET_INSTRINFO_SCHED_ENUM\n";
   OS << "namespace llvm::" << Namespace << "::Sched {\n\n";
-  OS << "  enum {\n";
+  OS << "  enum InstrInfoSched {\n";
   auto ExplictClasses = SchedModels.explicitSchedClasses();
   for (const auto &[Idx, Class] : enumerate(ExplictClasses))
     OS << "    " << Class.Name << "\t= " << Idx << ",\n";
