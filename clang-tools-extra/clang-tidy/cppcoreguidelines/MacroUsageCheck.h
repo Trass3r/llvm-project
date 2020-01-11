@@ -36,12 +36,15 @@ public:
   void storeOptions(ClangTidyOptions::OptionMap &Opts) override;
   void registerPPCallbacks(const SourceManager &SM, Preprocessor *PP,
                            Preprocessor *ModuleExpanderPP) override;
-  void warnMacro(const MacroDirective *MD, StringRef MacroName);
+  void warnMacro(const MacroDirective *MD, StringRef MacroName,
+                 const SourceManager &SM);
   void warnNaming(const MacroDirective *MD, StringRef MacroName);
 
 private:
   /// A regular expression that defines how allowed macros must look like.
   std::string AllowedRegexp;
+  std::pair<StringRef, const MacroDirective*> LastMacroPrefix;
+  bool InsideEnum = false;
   /// Control if only the check shall only test on CAPS_ONLY macros.
   bool CheckCapsOnly;
   /// Should the macros without a valid location be diagnosed?

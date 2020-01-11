@@ -26,6 +26,13 @@ static bool isCapsOnly(StringRef Name) {
   });
 }
 
+static StringRef enumPrefix(StringRef Name) {
+  size_t i = Name.find('_');
+  if (i == StringRef::npos)
+    return StringRef();
+  return Name.substr(0, i);
+}
+
 namespace {
 
 class MacroUsageCallbacks : public PPCallbacks {
@@ -50,10 +57,14 @@ public:
     if (MacroName == "__GCC_HAVE_DWARF2_CFI_ASM")
       return;
     if (!CheckCapsOnly && !RegExp.match(MacroName))
-      Check->warnMacro(MD, MacroName);
+      Check->warnMacro(MD, MacroName, SM);
 
     if (CheckCapsOnly && !isCapsOnly(MacroName))
       Check->warnNaming(MD, MacroName);
+  }
+
+  void EndOfMainFile() override {
+	  // TODO:
   }
 
 private:
@@ -78,7 +89,8 @@ void MacroUsageCheck::registerPPCallbacks(const SourceManager &SM,
       this, SM, AllowedRegexp, CheckCapsOnly, IgnoreCommandLineMacros));
 }
 
-void MacroUsageCheck::warnMacro(const MacroDirective *MD, StringRef MacroName) {
+void MacroUsageCheck::warnMacro(const MacroDirective *MD, StringRef MacroName,
+                                const SourceManager &SM) {
   const MacroInfo *Info = MD->getMacroInfo();
   StringRef Message;
 
@@ -95,8 +107,64 @@ void MacroUsageCheck::warnMacro(const MacroDirective *MD, StringRef MacroName) {
     Message = "function-like macro '%0' used; consider a 'constexpr' template "
               "function";
 
-  if (!Message.empty())
-    diag(MD->getLocation(), Message) << MacroName;
+  if (!isCapsOnly(MacroName))
+    return;
+  StringRef prefix = enumPrefix(MacroName);
+//  SM.getDecomposedLoc()
+//  SM.translateLineCol(SM.getFileID(MD->getLocation()),
+//      SM.getLineNumber(SM.getFileID(MD->getLocation()), SM.file MD->getLocation().), 1);
+  if (!prefix.empty()) {
+    if (prefix == enumPrefix(LastMacroPrefix.first)) {
+      if (!InsideEnum) {
+        InsideEnum = true;
+        // TODO: emit start of enum before LastMacro
+        // TODO: emit replacement for last macropre
+        auto LastMD = LastMacroPrefix.second;
+        auto LastMI = LastMD->getMacroInfo();
+        diag(LastMD->getLocation(), "%0 could be first enum")
+            << MacroName
+            << FixItHint::CreateReplacement(
+                   SourceRange(LastMD->getLocation().getLocWithOffset(-8),
+                               LastMD->getLocation().getLocWithOffset(-1)),
+                   ("enum " + prefix + " {\n\t").str())
+            << FixItHint::CreateInsertion(LastMI->tokens_begin()->getLocation(),
+                                          "= ")
+            << FixItHint::CreateInsertion(
+                   (LastMI->tokens_end() - 1)->getEndLoc(),
+                                          ",");
+      }
+      SourceRange defSrcRange(MI->getDefinitionLoc(),
+                              MI->getDefinitionEndLoc());
+      SourceRange replacementSrcRange(MI->tokens_begin()->getLocation(),
+                                      (MI->tokens_end() - 1)->getLocation());
+
+	  diag(MD->getLocation(), "macro %0 could be enum")
+          << MacroName
+		  << FixItHint::CreateReplacement(SourceRange(
+                   MD->getLocation().getLocWithOffset(-8),
+			  MD->getLocation().getLocWithOffset(-1)), "\t")
+          << FixItHint::CreateInsertion(MI->tokens_begin()->getLocation(),
+                                        "= ")
+          << FixItHint::CreateInsertion((MI->tokens_end() - 1)->getEndLoc(),
+                                        ",", true);
+    } else {
+      if (InsideEnum) {
+       // TODO: emit end
+        diag((LastMacroPrefix.second->getMacroInfo()->tokens_end() - 1)->getEndLoc(), "macro end")
+           << FixItHint::CreateInsertion(
+                  (LastMacroPrefix.second->getMacroInfo()->tokens_end() - 1)
+                      ->getEndLoc(),
+                                          "\n};");
+
+        InsideEnum = false;
+	  }
+    }
+  }
+  LastMacroPrefix.first = MacroName;
+  LastMacroPrefix.second = MD;
+
+  //if (!Message.empty())
+    //diag(MD->getLocation(), Message) << MacroName;
 }
 
 void MacroUsageCheck::warnNaming(const MacroDirective *MD,
