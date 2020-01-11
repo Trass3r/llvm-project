@@ -949,8 +949,13 @@ void LocalizingVariablesHandler::emitDiagnostics() {
       DeclarationCode += " ";
       if (VariableDeclaration->Status ==
           DeclarationStatus::ToBeMovedAsDeclaration) {
-        DeclarationCode += VariableDeclaration->Declaration->getNameAsString();
-        DeclarationCode += "; ";
+        const char *declStart = Context.getSourceManager().getCharacterData(
+            VariableDeclaration->Declaration->getBeginLoc());
+        const char *declEnd =
+            Context.getSourceManager().getCharacterData(findLocationAfterSemi(
+                VariableDeclaration->Declaration->getEndLoc(), Context, true));
+        std::string declString(declStart, declEnd);
+        DeclarationCode = declString;
       }
 
       AffectedDeclarationStatementIndexes.insert(
