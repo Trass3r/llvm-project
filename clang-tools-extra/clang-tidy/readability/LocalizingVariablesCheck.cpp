@@ -932,6 +932,18 @@ void LocalizingVariablesHandler::localizeVariable(
   }
 }
 
+// TODO: when moving into case statement that doesn't have a scope yet. hmm even works
+// sometimes variables not pulled into far enough
+// the case when a var is used in multiple scopes but never read afterwards, so if-else which should get 2 copies, or for loops with index
+// sometimes not pulled in far enough, especially with switch statements
+// asm blocks
+// macros in declaration
+// move comments after declaration
+// for (n=0; n < total; n++)
+// for (k = 0; k < 9; k++) {
+//   slbset[n].col_idx[k] = lword(&buf[i]);
+//   i += 2;
+// }
 void LocalizingVariablesHandler::emitDiagnostics() {
   for (auto &LocalizedDeclaration : LocalizedDeclarations) {
     const LocalizedVariableLocationInfo &LocationInfo =
@@ -944,8 +956,10 @@ void LocalizingVariablesHandler::emitDiagnostics() {
     llvm::DenseSet<int> AffectedDeclarationStatementIndexes;
     for (VariableDeclarationContext *VariableDeclaration :
          MovedVariableDeclarations) {
+      PrintingPolicy policy(Context.getLangOpts());
+      policy.ConstantArraySizeAsWritten = 1;
       DeclarationCode +=
-          VariableDeclaration->Declaration->getType().getAsString();
+          VariableDeclaration->Declaration->getType().getAsString(policy);
       DeclarationCode += " ";
       if (VariableDeclaration->Status ==
           DeclarationStatus::ToBeMovedAsDeclaration) {
@@ -955,6 +969,8 @@ void LocalizingVariablesHandler::emitDiagnostics() {
             Context.getSourceManager().getCharacterData(findLocationAfterSemi(
                 VariableDeclaration->Declaration->getEndLoc(), Context, true));
         std::string declString(declStart, declEnd);
+           // VariableDeclaration->Declaration->getloc getSourceRange().printToString(
+         //       Context.getSourceManager());
         DeclarationCode = declString;
       }
 
