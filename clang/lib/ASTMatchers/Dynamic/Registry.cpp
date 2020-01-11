@@ -392,6 +392,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(isInStdNamespace);
   REGISTER_MATCHER(isInTemplateInstantiation);
   REGISTER_MATCHER(isInline);
+  REGISTER_MATCHER(isEffectivelyInline);
   REGISTER_MATCHER(isInstanceMessage);
   REGISTER_MATCHER(isInstanceMethod);
   REGISTER_MATCHER(isInstantiated);
