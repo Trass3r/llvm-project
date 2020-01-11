@@ -724,7 +724,7 @@ TextDiagnostic::printDiagnosticLevel(raw_ostream &OS,
   // makes it more clear whether a message is coming from clang or cl.exe,
   // and it prevents MSBuild from concluding that the build failed just because
   // there is an "error:" in the output.
-  if (CLFallbackMode)
+  if (CLFallbackMode && Level >= DiagnosticsEngine::Error)
     OS << "(clang)";
 
   OS << ": ";
