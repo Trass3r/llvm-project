@@ -445,6 +445,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(isInTemplateInstantiation);
   REGISTER_MATCHER(isInitCapture);
   REGISTER_MATCHER(isInline);
+  REGISTER_MATCHER(isEffectivelyInline);
   REGISTER_MATCHER(isInstanceMessage);
   REGISTER_MATCHER(isInstanceMethod);
   REGISTER_MATCHER(isInstantiated);
