@@ -19,6 +19,7 @@
 #include "MoveConstructorInitCheck.h"
 #include "NoAutomaticMoveCheck.h"
 #include "NoexceptMoveConstructorCheck.h"
+#include "SymbolExportCheck.h"
 #include "TriviallyDestructibleCheck.h"
 #include "TypePromotionInMathFnCheck.h"
 #include "UnnecessaryCopyInitialization.h"
@@ -51,6 +52,8 @@ public:
         "performance-no-automatic-move");
     CheckFactories.registerCheck<NoexceptMoveConstructorCheck>(
         "performance-noexcept-move-constructor");
+    CheckFactories.registerCheck<SymbolExportCheck>(
+        "performance-symbol-export");
     CheckFactories.registerCheck<TriviallyDestructibleCheck>(
         "performance-trivially-destructible");
     CheckFactories.registerCheck<TypePromotionInMathFnCheck>(
