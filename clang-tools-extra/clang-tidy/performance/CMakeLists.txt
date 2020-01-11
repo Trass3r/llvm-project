@@ -16,6 +16,7 @@ add_clang_library(clangTidyPerformanceModule
   NoIntToPtrCheck.cpp
   NoexceptMoveConstructorCheck.cpp
   PerformanceTidyModule.cpp
+  SymbolExportCheck.cpp
   TriviallyDestructibleCheck.cpp
   TypePromotionInMathFnCheck.cpp
   UnnecessaryCopyInitialization.cpp
