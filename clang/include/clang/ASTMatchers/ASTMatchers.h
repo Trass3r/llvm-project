@@ -8080,6 +8080,21 @@ AST_POLYMORPHIC_MATCHER(isInline, AST_POLYMORPHIC_SUPPORTED_TYPES(NamespaceDecl,
   llvm_unreachable("Not a valid polymorphic type");
 }
 
+/// Matches function declarations that are either marked with
+/// the inline keyword or are implicitly inline.
+///
+/// Given
+/// \code
+///   class A {
+///     void f() {}
+///     void g();
+///   }
+/// \endcode
+/// functionDecl(isEffectivelyInline()) will match f().
+AST_MATCHER(FunctionDecl, isEffectivelyInline) {
+  return Node.isInlined();
+}
+
 /// Matches anonymous namespace declarations.
 ///
 /// Given
