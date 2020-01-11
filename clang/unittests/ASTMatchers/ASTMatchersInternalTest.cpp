@@ -306,6 +306,16 @@ TEST(IsInlineMatcher, IsInline) {
                       varDecl(isInline(), hasName("Foo")), {Lang_CXX17}));
 }
 
+TEST(IsInlineMatcher, IsEffectivelyInline) {
+  EXPECT_TRUE(matches("class X { void f() {} };",
+                      functionDecl(isEffectivelyInline(), hasName("f"))));
+  EXPECT_TRUE(notMatches("class X { void f(); };",
+                      functionDecl(isEffectivelyInline())));
+  EXPECT_TRUE(matches("constexpr int f() { return 0; }",
+                      functionDecl(isEffectivelyInline(), hasName("f")),
+                      {Lang_CXX11}));
+}
+
 // FIXME: Figure out how to specify paths so the following tests pass on
 // Windows.
 #ifndef _WIN32

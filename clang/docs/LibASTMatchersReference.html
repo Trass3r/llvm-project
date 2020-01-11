@@ -4347,6 +4347,19 @@ varDecl(isInline()) will match Foo;
 </pre></td></tr>
 
 
+<tr><td>Matcher&lt;<a href="https://clang.llvm.org/doxygen/classclang_1_1FunctionDecl.html">FunctionDecl</a>&gt;</td><td class="name" onclick="toggle('isEffectivelyInline0')"><a name="isEffectivelyInline0Anchor">isEffectivelyInline</a></td><td></td></tr>
+<tr><td colspan="4" class="doc" id="isEffectivelyInline0"><pre>Matches function declarations that are either marked with
+the inline keyword or are implicitly inline.
+
+Given
+  class A {
+    void f() {}
+    void g();
+  };
+functionDecl(isEffectivelyInline()) will match ::f().
+</pre></td></tr>
+
+
 <tr><td>Matcher&lt;<a href="https://clang.llvm.org/doxygen/classclang_1_1FunctionDecl.html">FunctionDecl</a>&gt;</td><td class="name" onclick="toggle('isMain0')"><a name="isMain0Anchor">isMain</a></td><td></td></tr>
 <tr><td colspan="4" class="doc" id="isMain0"><pre>Determines whether the function is "main", which is the entry point
 into an executable program.

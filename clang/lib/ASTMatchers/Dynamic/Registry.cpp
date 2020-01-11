@@ -415,6 +415,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(isDefinition);
   REGISTER_MATCHER(isDelegatingConstructor);
   REGISTER_MATCHER(isDeleted);
+  REGISTER_MATCHER(isEffectivelyInline);
   REGISTER_MATCHER(isEnum);
   REGISTER_MATCHER(isExceptionVariable);
   REGISTER_MATCHER(isExpandedFromMacro);
