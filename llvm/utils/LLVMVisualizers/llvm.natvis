@@ -36,6 +36,9 @@ For later versions of Visual Studio, no setup is required.
     <DisplayString Condition="BitWidth &lt;= 64">{U.VAL}</DisplayString>
     <DisplayString>Cannot visualize APInts longer than 64 bits</DisplayString>
   </Type>
+  <Type Name="llvm::support::detail::packed_endian_specific_integral&lt;*,*,*,*&gt;">
+    <DisplayString>{*($T1*)&amp;Value}</DisplayString>
+  </Type>
   <Type Name="llvm::ArrayRef&lt;*&gt;">
     <DisplayString Condition="Length &lt; 4">{Data,[Length]}</DisplayString>
     <DisplayString Condition="Length &gt; 3">{Length} elements</DisplayString>
