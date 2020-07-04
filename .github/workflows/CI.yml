@@ -14,9 +14,9 @@ jobs:
         #buildconfig: [Debug, Release]
         config:
         - {cc: gcc, cxx: g++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
-        - {cc: gcc, cxx: g++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=skylake -flto -gsplit-dwarf -Wsuggest-final-types"}
+        - {cc: gcc, cxx: g++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -Wsuggest-final-types"}
         - {cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
-        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=skylake -flto=thin -gsplit-dwarf -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
+        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
 
     steps:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
