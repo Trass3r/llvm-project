@@ -19,6 +19,7 @@ jobs:
         CC=clang CXX=clang++ cmake -G Ninja -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_DUMP=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON -DLLVM_ENABLE_PIC=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS=all -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/clang -DCMAKE_CXX_FLAGS="-march=haswell -gsplit-dwarf" -DLLVM_BINUTILS_INCDIR=/usr/include -DBUILD_SHARED_LIBS=ON ../llvm/
         ninja
         sudo ninja install
+        sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e'
     - uses: actions/upload-artifact@v1
       with:
         name: clang
