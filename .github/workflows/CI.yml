@@ -22,13 +22,13 @@ jobs:
       uses: actions/cache@v2
       with:
         path: build/.ccache
-        key: ${ { matrix.config.name } }-ccache
+        key: ${{ matrix.config.name }}-ccache
         restore-keys: |
-          ${ { matrix.config.name } }-ccache-
+          ${{ matrix.config.name }}-ccache-
     - name: build
       run: |
         mkdir -p build && cd build
-        CC=clang CXX=clang++ cmake -G Ninja-D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_DUMP=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON -DLLVM_ENABLE_PIC=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS=all -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/clang -DCMAKE_CXX_FLAGS="-march=haswell -gsplit-dwarf -ftime-trace" -DLLVM_BINUTILS_INCDIR=/usr/include -DBUILD_SHARED_LIBS=ON ../llvm/
+        CC=clang CXX=clang++ cmake -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_DUMP=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON -DLLVM_ENABLE_PIC=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS=all -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/clang -DCMAKE_CXX_FLAGS="-march=haswell -gsplit-dwarf -ftime-trace" -DLLVM_BINUTILS_INCDIR=/usr/include -DBUILD_SHARED_LIBS=ON ../llvm/
         ninja -k100 ; ccache -s
         git clone --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing buildtrace.json
