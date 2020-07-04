@@ -1,6 +1,4 @@
 name: CI
-env:
- CCACHE_BASEDIR: $GITHUB_WORKSPACE
 
 on:
   push:
@@ -12,7 +10,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - run: echo $CCACHE_BASEDIR
+    - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
     - run: sudo apt install -y build-essential binutils-dev cmake ninja-build clang lld python3 ccache
@@ -29,7 +27,7 @@ jobs:
           ${ { matrix.config.name } }-ccache-
     - name: build
       run: |
-        mkdir build && cd build
+        mkdir -p build && cd build
         CC=clang CXX=clang++ cmake -G Ninja-D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_DUMP=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON -DLLVM_ENABLE_PIC=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS=all -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/clang -DCMAKE_CXX_FLAGS="-march=haswell -gsplit-dwarf -ftime-trace" -DLLVM_BINUTILS_INCDIR=/usr/include -DBUILD_SHARED_LIBS=ON ../llvm/
         ninja -k100 ; ccache -s
         git clone --depth=1 https://github.com/nico/ninjatracing.git
