@@ -17,7 +17,7 @@ jobs:
       run: |
         mkdir build && cd build
         CC=clang CXX=clang++ cmake -G Ninja -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_DUMP=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON -DLLVM_ENABLE_PIC=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS=all -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/clang -DCMAKE_CXX_FLAGS="-march=haswell -gsplit-dwarf -ftime-trace" -DLLVM_BINUTILS_INCDIR=/usr/include -DBUILD_SHARED_LIBS=ON ../llvm/
-        ninja
+        ninja -k100
         git clone --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing buildtrace.json
         python3 ninjatracing/ninjatracing -e buildtrace.e.json
