@@ -43,8 +43,8 @@ jobs:
         ninja -k100
         ccache -s
         git clone --depth=1 https://github.com/nico/ninjatracing.git
-        python3 ninjatracing/ninjatracing build/.ninja_log > buildtrace.json
-        python3 ninjatracing/ninjatracing build/.ninja_log -e > buildtrace.e.json
+        python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
+        python3 ninjatracing/ninjatracing .ninja_log -e > buildtrace.e.json
         sudo ninja install
         sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e'
     - uses: actions/upload-artifact@v2
