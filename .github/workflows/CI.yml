@@ -39,7 +39,9 @@ jobs:
       run: |
         mkdir -p build && cd build
         cmake -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_TARGETS_TO_BUILD=all -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;libc;libclc;libcxx;libcxxabi;libunwind;lld;lldb;openmp;parallel-libs;polly;pstl" -DCMAKE_INSTALL_PREFIX=/opt/clang -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_LLD=ON -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64;AMDGPU;NVPTX;RISCV;WebAssembly" -DLLVM_ENABLE_UNWIND_TABLES=OFF -DBUILD_SHARED_LIBS=ON ${{ matrix.config.cmake_args }} ../llvm/
-        ninja -k100 ; ccache -s
+        set +e
+        ninja -k100
+        ccache -s
         git clone --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing build/.ninja_log > buildtrace.json
         python3 ninjatracing/ninjatracing build/.ninja_log -e > buildtrace.e.json
@@ -47,11 +49,11 @@ jobs:
         sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e'
     - uses: actions/upload-artifact@v2
       with:
-        name: clang
-        path: /opt/clang
-    - uses: actions/upload-artifact@v2
-      with:
         path: buildtrace.json
     - uses: actions/upload-artifact@v2
       with:
         path: buildtrace.e.json
+    - uses: actions/upload-artifact@v2
+      with:
+        name: clang
+        path: /opt/clang
