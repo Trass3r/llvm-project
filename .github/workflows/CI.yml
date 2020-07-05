@@ -13,8 +13,8 @@ jobs:
         #compiler: [g++, clang++]
         #buildconfig: [Debug, Release]
         config:
-        - {cc: gcc, cxx: g++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
-        - {cc: gcc, cxx: g++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -Wsuggest-final-types"}
+        - {cc: gcc-10, cxx: g++-10, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
+        - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -Wsuggest-final-types"}
         - {cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
         - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
 
@@ -22,7 +22,7 @@ jobs:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
-    - run: sudo apt install -y build-essential binutils-dev cmake ninja-build clang lld python3 ccache libedit-dev
+    - run: sudo apt install -y build-essential g++-10 binutils-dev cmake ninja-build clang lld python3 ccache libedit-dev
     - name: Prepare ccache timestamp
       id: ccache_cache_timestamp
       run: echo "::set-output name=date::`date -u +"%Y-%m-%d-%H;%M;%S"`"
