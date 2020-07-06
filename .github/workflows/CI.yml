@@ -14,9 +14,9 @@ jobs:
         #buildconfig: [Debug, Release]
         config:
         - {cc: gcc-10, cxx: g++-10, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
-        - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -Wsuggest-final-types"}
+        - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -g1 -gdwarf-5 -Wsuggest-final-types"}
         - {cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
-        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
+        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -g1 -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
 
     steps:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
@@ -47,6 +47,10 @@ jobs:
         python3 ninjatracing/ninjatracing .ninja_log -e > buildtrace.e.json
         sudo ninja install
         sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e'
+    - name: separate debug info
+      if: ${{ matrix.config.cc == 'gcc' }}
+      run: |
+        sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
     - uses: actions/upload-artifact@v2
       with:
         path: buildtrace.json
