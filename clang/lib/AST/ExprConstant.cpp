@@ -51,11 +51,15 @@
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/FixedPoint.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/TargetInfo.h"
+#include "clang/Lex/Lexer.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallBitVector.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/SaveAndRestore.h"
+#include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cstring>
 #include <functional>
@@ -67,6 +71,12 @@ using llvm::APInt;
 using llvm::APSInt;
 using llvm::APFloat;
 using llvm::Optional;
+
+static StringRef getSourceTextForExpr(const ASTContext &Ctx, const Expr *E) {
+  return Lexer::getSourceText(
+      CharSourceRange::getTokenRange(E->getSourceRange()),
+      Ctx.getSourceManager(), Ctx.getLangOpts());
+}
 
 namespace {
   struct LValue;
@@ -5735,7 +5745,7 @@ static bool EvaluateArgs(ArrayRef<const Expr *> Args, ArgVector &ArgValues,
 }
 
 /// Evaluate a function call.
-static bool HandleFunctionCall(SourceLocation CallLoc,
+static bool HandleFunctionCall(SourceRange CallRange,
                                const FunctionDecl *Callee, const LValue *This,
                                ArrayRef<const Expr*> Args, const Stmt *Body,
                                EvalInfo &Info, APValue &Result,
@@ -5744,8 +5754,14 @@ static bool HandleFunctionCall(SourceLocation CallLoc,
   if (!EvaluateArgs(Args, ArgValues, Info, Callee))
     return false;
 
+  auto CallLoc = CallRange.getBegin();
   if (!Info.CheckCallLimit(CallLoc))
     return false;
+
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, Lexer::getSourceText(
+      CharSourceRange::getTokenRange(CallLoc),
+      Info.Ctx.getSourceManager(), Info.Ctx.getLangOpts())
+  );
 
   CallStackFrame Frame(Info, CallLoc, Callee, This, ArgValues.data());
 
@@ -6011,6 +6027,7 @@ static bool HandleConstructorCall(const Expr *E, const LValue &This,
                                   ArrayRef<const Expr*> Args,
                                   const CXXConstructorDecl *Definition,
                                   EvalInfo &Info, APValue &Result) {
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, getSourceTextForExpr(Info.Ctx, E));
   ArgVector ArgValues(Args.size());
   if (!EvaluateArgs(Args, ArgValues, Info, Definition))
     return false;
@@ -7299,7 +7316,7 @@ public:
     Stmt *Body = FD->getBody(Definition);
 
     if (!CheckConstexprFunction(Info, E->getExprLoc(), FD, Definition, Body) ||
-        !HandleFunctionCall(E->getExprLoc(), Definition, This, Args, Body, Info,
+        !HandleFunctionCall(E->getSourceRange(), Definition, This, Args, Body, Info,
                             Result, ResultSlot))
       return false;
 
@@ -13886,6 +13903,7 @@ static bool Evaluate(APValue &Result, EvalInfo &Info, const Expr *E) {
   // In C, function designators are not lvalues, but we evaluate them as if they
   // are.
   QualType T = E->getType();
+  //llvm::TimeTraceScope scope(Info.InConstantContext ? "constexpr evaluation" : "non-const evaluation", [&](){ return T.getAsString(); });
   if (E->isGLValue() || T->isFunctionType()) {
     LValue LV;
     if (!EvaluateLValue(E, LV, Info))
@@ -14822,6 +14840,8 @@ static bool EvaluateCPlusPlus11IntegralConstantExpr(const ASTContext &Ctx,
     return false;
   }
 
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, getSourceTextForExpr(Ctx, E));
+
   APValue Result;
   if (!E->isCXX11ConstantExpr(Ctx, &Result, Loc))
     return false;
@@ -14853,6 +14873,7 @@ bool Expr::isIntegerConstantExpr(const ASTContext &Ctx,
 
 bool Expr::isIntegerConstantExpr(llvm::APSInt &Value, const ASTContext &Ctx,
                                  SourceLocation *Loc, bool isEvaluated) const {
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION);
   assert(!isValueDependent() &&
          "Expression evaluator can't be called on a dependent expression.");
 
@@ -14975,7 +14996,7 @@ bool Expr::EvaluateWithSubstitution(APValue &Value, ASTContext &Ctx,
          !Info.EvalStatus.HasSideEffects;
 }
 
-bool Expr::isPotentialConstantExpr(const FunctionDecl *FD,
+bool Expr::isPotentialConstantExpr(const ASTContext &Ctx, const FunctionDecl *FD,
                                    SmallVectorImpl<
                                      PartialDiagnosticAt> &Diags) {
   // FIXME: It would be useful to check constexpr function templates, but at the
@@ -14993,6 +15014,14 @@ bool Expr::isPotentialConstantExpr(const FunctionDecl *FD,
         return false;
     }
   }
+
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, [&]() {
+      std::string Name;
+      llvm::raw_string_ostream OS(Name);
+      FD->getNameForDiagnostic(OS, Ctx.getPrintingPolicy(),
+                               /*Qualified=*/true);
+      return Name;
+  });
   Expr::EvalStatus Status;
   Status.Diag = &Diags;
 
@@ -15024,7 +15053,7 @@ bool Expr::isPotentialConstantExpr(const FunctionDecl *FD,
     Info.setEvaluatingDecl(This.getLValueBase(), Scratch);
     HandleConstructorCall(&VIE, This, Args, CD, Info, Scratch);
   } else {
-    SourceLocation Loc = FD->getLocation();
+    auto Loc = FD->getSourceRange();
     HandleFunctionCall(Loc, FD, (MD && MD->isInstance()) ? &This : nullptr,
                        Args, FD->getBody(), Info, Scratch, nullptr);
   }

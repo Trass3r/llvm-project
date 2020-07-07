@@ -10,7 +10,10 @@
 #include "Context.h"
 #include "Opcode.h"
 #include "Program.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/TimeProfiler.h"
 
 using namespace clang;
 using namespace clang::interp;
@@ -22,6 +25,14 @@ Expected<Function *> ByteCodeEmitter::compileFunc(const FunctionDecl *F) {
   // Do not try to compile undefined functions.
   if (!F->isDefined(F) || (!F->hasBody() && F->willHaveBody()))
     return nullptr;
+
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, [&]() {
+      std::string Name;
+      llvm::raw_string_ostream OS(Name);
+      F->getNameForDiagnostic(OS, Ctx.getASTContext().getPrintingPolicy(),
+                               /*Qualified=*/true);
+      return Name;
+  });
 
   // Set up argument indices.
   unsigned ParamOffset = 0;
