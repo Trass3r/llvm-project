@@ -48,7 +48,7 @@ jobs:
         sudo ninja install
         sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e' || true
     - name: separate debug info
-      if: ${{ matrix.config.cc == 'gcc' }}
+      if: ${{ startsWith(matrix.config.cc, 'gcc') }}
       run: |
         sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
     - uses: actions/upload-artifact@v2
