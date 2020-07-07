@@ -52,6 +52,7 @@ jobs:
         sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e' || true
     - uses: actions/upload-artifact@v2
       with:
+        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-log
         path: /tmp/ccache.log
     - name: separate debug info
       if: ${{ startsWith(matrix.config.cc, 'gcc') }}
