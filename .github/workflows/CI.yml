@@ -53,10 +53,10 @@ jobs:
         sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
     - uses: actions/upload-artifact@v2
       with:
-        path: buildtrace.json
+        path: build/buildtrace.json
     - uses: actions/upload-artifact@v2
       with:
-        path: buildtrace.e.json
+        path: build/buildtrace.e.json
     - uses: actions/upload-artifact@v2
       with:
         name: clang
