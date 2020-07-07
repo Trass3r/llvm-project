@@ -32,7 +32,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: build/.ccache
-        key: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache
+        key: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-${{ steps.ccache_cache_timestamp.outputs.date }}
+        restore-keys: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-
     - name: build
       env:
         CC: ${{ matrix.config.cc }}
