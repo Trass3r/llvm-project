@@ -55,7 +55,7 @@ jobs:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-log
         path: /tmp/ccache.log
     - name: separate debug info
-      if: ${{ startsWith(matrix.config.cc, 'gcc') }}
+      if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
       run: |
         sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
 
