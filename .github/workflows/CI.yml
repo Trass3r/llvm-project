@@ -49,7 +49,7 @@ jobs:
         python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
         python3 ninjatracing/ninjatracing .ninja_log -e > buildtrace.e.json
         sudo ninja install
-        sudo bash -c 'find /opt/clang -type f -executable | xargs -t -n1 -P8 dwp -v -e' || true
+        sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e'
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-log
