@@ -60,8 +60,9 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        path: build/buildtrace.e.json
+        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-trace
+        path: build/buildtrace*
     - uses: actions/upload-artifact@v2
       with:
-        name: clang
+        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-clang
         path: /opt/clang
