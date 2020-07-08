@@ -44,7 +44,6 @@ jobs:
         set +e
         ninja -k100
         ccache -s
-        exit
         git clone --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
         sudo ninja install
