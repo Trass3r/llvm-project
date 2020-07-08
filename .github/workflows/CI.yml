@@ -65,6 +65,7 @@ jobs:
         path: /tmp/ccache.log
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
+      continue-on-error: true
       run: |
         sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
 
