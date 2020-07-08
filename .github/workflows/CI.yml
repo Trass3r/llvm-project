@@ -19,7 +19,6 @@ jobs:
     steps:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
     - run: echo "::set-env name=CCACHE_BASEDIR::$GITHUB_WORKSPACE"
-    - run: echo "::set-env name=CCACHE_LOGFILE::/tmp/ccache.log"
     - run: echo "::set-env name=CCACHE_DEBUG::1"
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
@@ -57,10 +56,6 @@ jobs:
         path: |
           **/*.ccache-input-text
           **/*.ccache-log
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-log
-        path: /tmp/ccache.log
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
       continue-on-error: true
