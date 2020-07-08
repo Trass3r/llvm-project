@@ -42,7 +42,7 @@ jobs:
         ccache -z
         cmake -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;libclc;libcxx;libcxxabi;libunwind;lld;openmp;parallel-libs;pstl" -DCMAKE_INSTALL_PREFIX=/opt/clang -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_LLD=ON -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64;AMDGPU;NVPTX;RISCV;WebAssembly" -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_DUMP=ON -DBUILD_SHARED_LIBS=ON ${{ matrix.config.cmake_args }} ../llvm/
         set +e
-        ninja -k100 lib/Support/all
+        ninja -k100
         ccache -s
         exit
         git clone --depth=1 https://github.com/nico/ninjatracing.git
