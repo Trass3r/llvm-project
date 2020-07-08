@@ -10,8 +10,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #compiler: [g++, clang++]
-        #buildconfig: [Debug, Release]
         config:
         - {cc: gcc-10, cxx: g++-10, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
         - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -g1 -gdwarf-5 -Wsuggest-final-types"}
