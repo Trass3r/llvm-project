@@ -22,6 +22,7 @@ jobs:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
     - run: echo "::set-env name=CCACHE_BASEDIR::$GITHUB_WORKSPACE"
     - run: echo "::set-env name=CCACHE_LOGFILE::/tmp/ccache.log"
+    - run: echo "::set-env name=CCACHE_DEBUG::1"
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
     - run: sudo apt install -y build-essential g++-10 binutils-dev cmake ninja-build clang lld python3 ccache libedit-dev
@@ -44,13 +45,20 @@ jobs:
         ccache -z
         cmake -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;libclc;libcxx;libcxxabi;libunwind;lld;openmp;parallel-libs;pstl" -DCMAKE_INSTALL_PREFIX=/opt/clang -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_LLD=ON -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64;AMDGPU;NVPTX;RISCV;WebAssembly" -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_DUMP=ON -DBUILD_SHARED_LIBS=ON ${{ matrix.config.cmake_args }} ../llvm/
         set +e
-        ninja -k100
+        ninja -k100 lib/Support/all
         ccache -s
+        exit
         git clone --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
         python3 ninjatracing/ninjatracing .ninja_log -e > buildtrace.e.json
         sudo ninja install
         sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-debug
+        path: |
+          **/*.ccache-input-text
+          **/*.ccache-log
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-log
