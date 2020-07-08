@@ -66,7 +66,7 @@ jobs:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-trace
         path: build/buildtrace*
     - name: create tarball
-      run: cd /opt/clang/ && tar cvapf clang.tar.xz *
+      run: cd /opt/clang/ && tar cvapf "$GITHUB_WORKSPACE/clang.tar.xz" *
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-clang
