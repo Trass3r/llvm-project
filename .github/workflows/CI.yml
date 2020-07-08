@@ -20,6 +20,7 @@ jobs:
 
     steps:
     - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
+    - run: echo "::set-env name=CCACHE_BASEDIR::$GITHUB_WORKSPACE"
     - run: echo "::set-env name=CCACHE_LOGFILE::/tmp/ccache.log"
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
