@@ -52,7 +52,7 @@ jobs:
     - name: install
       run: |
         cd build
-        sudo mkdir /opt/clang
+        sudo ninja install
         sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
@@ -64,3 +64,9 @@ jobs:
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-trace
         path: build/buildtrace*
+    - name: create tarball
+      run: cd /opt/clang/ && tar cvapf "$GITHUB_WORKSPACE/clang.tar.xz" *
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-clang
+        path: clang.tar.xz
