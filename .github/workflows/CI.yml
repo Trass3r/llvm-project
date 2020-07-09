@@ -56,7 +56,7 @@ jobs:
     - name: install
       run: |
         cd build
-        sudo ninja install
+        sudo mkdir /opt/clang
         sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
