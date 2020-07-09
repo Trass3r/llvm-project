@@ -34,8 +34,8 @@ jobs:
       env:
         CC: ${{ matrix.config.cc }}
         CXX: ${{ matrix.config.cxx }}
-        CCACHE_DIR: ${{ env.GITHUB_WORKSPACE }}/build/.ccache
-        CCACHE_BASEDIR: ${{ env.GITHUB_WORKSPACE }}
+        CCACHE_DIR: ${{ github.workspace }}/build/.ccache
+        CCACHE_BASEDIR: ${{ github.workspace }}
         CCACHE_DEBUG: 1
         CCACHE_MAXSIZE: 4G
       run: |
