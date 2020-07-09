@@ -37,7 +37,7 @@ jobs:
         CCACHE_DIR: ${{ github.workspace }}/build/.ccache
         CCACHE_BASEDIR: ${{ github.workspace }}
         CCACHE_DEBUG: 1
-        CCACHE_MAXSIZE: 4G
+        CCACHE_MAXSIZE: 2G
       run: |
         mkdir -p build && cd build
         ccache -z
