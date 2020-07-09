@@ -47,18 +47,17 @@ jobs:
         ccache -s
         git clone --quiet --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
-        exit 1
-    - name: install
-      run: |
-        cd build
-        sudo ninja install
-        sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-debug
         path: |
           **/*.ccache-input-text
           **/*.ccache-log
+    - name: install
+      run: |
+        cd build
+        sudo ninja install
+        sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
       continue-on-error: true
