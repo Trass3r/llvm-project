@@ -20,7 +20,7 @@ jobs:
       id: ccache_cache_timestamp
       run: echo "::set-output name=date::`date -u +"%Y%m%d-%H%M%S"`"
 
-    - name: ccache cache files
+    - name: restore ccache cache
       uses: actions/cache@v2
       with:
         path: build/.ccache
