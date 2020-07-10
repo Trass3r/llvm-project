@@ -53,12 +53,12 @@ jobs:
       run: |
         cd build
         sudo ninja install
-        sudo bash -c 'find /opt/clang -type f -executable -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
+        sudo bash -c 'find /opt/clang -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
     - name: separate debug info
       if: ${{ !contains(matrix.config.cmake_args, 'gsplit-dwarf') }}
       continue-on-error: true
       run: |
-        sudo bash -c 'find /opt/clang -type f -executable -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
+        sudo bash -c 'find /opt/clang -type f \( -executable -o -name \*.so\* \) -exec objcopy --only-keep-debug {} {}.dbg \; -exec strip --strip-debug --strip-unneeded {} \; -exec objcopy --add-gnu-debuglink={}.dbg {} \; -exec chmod -x {}.dbg \;'
 
     - uses: actions/upload-artifact@v2
       with:
