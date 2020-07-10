@@ -33,6 +33,7 @@ jobs:
         CCACHE_DIR: ${{ github.workspace }}/build/.ccache
         CCACHE_BASEDIR: ${{ github.workspace }}
         #CCACHE_DEBUG: 1
+        CCACHE_LOGFILE: /tmp/ccache.log
         CCACHE_MAXSIZE: 2G
       run: |
         mkdir -p build && cd build
@@ -47,6 +48,7 @@ jobs:
       with:
         name: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache-debug
         path: |
+          /tmp/ccache.log
           **/*.ccache-input-text
           **/*.ccache-log
     - name: install
