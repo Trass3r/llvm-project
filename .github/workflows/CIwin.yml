@@ -1,5 +1,7 @@
 name: CI Windows
-on: [push, pull_request]
+on:
+  push:
+    branches: winbuild
 jobs:
   build:
     runs-on: windows-latest
