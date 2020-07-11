@@ -40,7 +40,7 @@ jobs:
         CCACHE_BASEDIR: ${{ github.workspace }}
         #CCACHE_DEBUG: 1
         CCACHE_LOGFILE: /tmp/ccache.log
-        CCACHE_MAXSIZE: 4G
+        CCACHE_MAXSIZE: 6G
       run: |
         mkdir -p build && cd build
         mkdir -p /tmp/thinltocache
