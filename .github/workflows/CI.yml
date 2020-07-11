@@ -10,7 +10,7 @@ jobs:
         - {cc: gcc-10, cxx: g++-10, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
         - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -g1 -gdwarf-5 -Wsuggest-final-types"}
         - {cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf" }
-        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -g1" -DCMAKE_EXE_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker -stats -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" -DCMAKE_SHARED_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker -stats -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" }
+        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -g1" -DCMAKE_EXE_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" -DCMAKE_SHARED_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" }
 
     steps:
     - uses: actions/checkout@v2
@@ -29,7 +29,7 @@ jobs:
     - name: restore thinlto cache
       uses: actions/cache@v2
       with:
-        path: /tmp/thinltocache
+        path: build/lto.cache
         key: ${{ matrix.config.cc }}-${{ matrix.config.config }}-thinlto-${{ steps.ccache_cache_timestamp.outputs.date }}
         restore-keys: ${{ matrix.config.cc }}-${{ matrix.config.config }}-thinlto-
     - name: build
@@ -43,12 +43,10 @@ jobs:
         CCACHE_MAXSIZE: 6G
       run: |
         mkdir -p build && cd build
-        mkdir -p /tmp/thinltocache
         ccache -z
         cmake -G Ninja -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;libclc;libcxx;libcxxabi;libunwind;lld;openmp;parallel-libs;pstl" -DCMAKE_INSTALL_PREFIX=/opt/clang -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_LLD=ON -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64;AMDGPU;NVPTX;RISCV;WebAssembly" -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_DUMP=ON -DBUILD_SHARED_LIBS=ON ${{ matrix.config.cmake_args }} ../llvm/
         set +e
-        ninja -v -k100
-        ls -la /tmp/thinltocache
+        ninja -k100
         ccache -s
         git clone --quiet --depth=1 https://github.com/nico/ninjatracing.git
         python3 ninjatracing/ninjatracing .ninja_log > buildtrace.json
