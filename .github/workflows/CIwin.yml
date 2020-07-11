@@ -14,7 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
-    - run: |
+    - shell: cmd 
+      run: |
         curl -Ls -o "LLVM-10.0.0-win64.exe" "https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/LLVM-10.0.0-win64.exe"
         LLVM-10.0.0-win64.exe /S
     - uses: ilammy/msvc-dev-cmd@v1
