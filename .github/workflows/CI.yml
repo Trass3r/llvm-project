@@ -10,7 +10,7 @@ jobs:
         - {cc: gcc-10, cxx: g++-10, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf"}
         - {cc: gcc-10, cxx: g++-10, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF DCMAKE_CXX_FLAGS="-march=skylake -g1 -gdwarf-5 -Wsuggest-final-types"}
         - {cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=skylake -Og -gsplit-dwarf" }
-        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -g1" -DCMAKE_EXE_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" -DCMAKE_SHARED_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-dir=/tmp/thinltocache -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" }
+        - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -g1" -DCMAKE_EXE_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" -DCMAKE_SHARED_LINKER_FLAGS="-gsplit-dwarf -fuse-ld=lld -Xlinker --thinlto-cache-policy=cache_size_bytes=3G" }
 
     steps:
     - uses: actions/checkout@v2
