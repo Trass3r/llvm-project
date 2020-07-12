@@ -61,7 +61,6 @@ jobs:
       run: |
         cd build
         sudo ninja install
-        find -name '*.dwo'
         sudo bash -c 'find /opt/clang -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
         find /opt/clang/lib -name '*.so' -exec sh -c 'nm -D {} | fgrep " T " | wc -l' \;
     - name: separate debug info
