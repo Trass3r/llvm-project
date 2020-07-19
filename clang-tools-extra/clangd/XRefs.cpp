@@ -1054,6 +1054,7 @@ ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
           Result.range = Ref;
           Result.uri = URIMainFile;
           Results.References.push_back(std::move(Result));
+          Results.Roles.push_back(index::SymbolRoleSet(index::SymbolRole::Reference));
         }
       }
       Req.IDs.insert(*MacroSID);
@@ -1084,6 +1085,7 @@ ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
       Result.range = Ref.range(SM);
       Result.uri = URIMainFile;
       Results.References.push_back(std::move(Result));
+      Results.Roles.push_back(Ref.Role);
     }
     if (Index && Results.References.size() <= Limit) {
       for (const Decl *D : Decls) {
@@ -1111,6 +1113,7 @@ ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
         return;
 
       Results.References.push_back(std::move(*LSPLoc));
+      //Results.Roles.push_back(R.Kind);
     });
   }
   if (Results.References.size() > Limit) {
@@ -1125,7 +1128,7 @@ std::vector<CodeLens> provideCodeLens(ParsedAST &AST, uint32_t Limit,
   auto &SM = AST.getSourceManager();
   std::vector<CodeLens> Results;
   for (auto *TopLevel : AST.getLocalTopLevelDecls()) {
-    auto res = findReferences(AST, sourceLocToPosition(SM, TopLevel->getLocation()),
+    auto Res = findReferences(AST, sourceLocToPosition(SM, TopLevel->getLocation()),
                               Limit, Index);
     SourceLocation BeginLoc =
         SM.getSpellingLoc(SM.getFileLoc(TopLevel->getBeginLoc()));
@@ -1135,8 +1138,30 @@ std::vector<CodeLens> provideCodeLens(ParsedAST &AST, uint32_t Limit,
                    sourceLocToPosition(SM, EndLoc)};
     Command cmd;
     cmd.command = "invalidcommand";
-    cmd.title = std::to_string(res.References.size()) + " references";
-    Results.push_back(CodeLens{r, std::move(cmd)});
+    uint32_t NumOverrides = 0;
+    uint32_t NumChildren = 0;
+    uint32_t NumBases = 0;
+    uint32_t NumCalledBy = 0;
+    for (auto roles : Res.Roles) {
+      if (roles & index::SymbolRoleSet(index::SymbolRole::RelationOverrideOf))
+        ++NumOverrides;
+      if (roles & index::SymbolRoleSet(index::SymbolRole::RelationChildOf))
+        ++NumChildren;
+      if (roles & index::SymbolRoleSet(index::SymbolRole::RelationBaseOf))
+        ++NumBases;
+      if (roles & index::SymbolRoleSet(index::SymbolRole::RelationCalledBy))
+        ++NumCalledBy;
+    }
+    cmd.title = std::to_string(Res.References.size()) + " reference(s)";
+    Results.push_back(CodeLens{r, cmd});
+    cmd.title = std::to_string(NumOverrides) + " override(s)";
+    Results.push_back(CodeLens{r, cmd});
+    cmd.title = std::to_string(NumBases) + " base(s)";
+    Results.push_back(CodeLens{r, cmd});
+    cmd.title = std::to_string(NumChildren) + " child(ren)";
+    Results.push_back(CodeLens{r, cmd});
+    cmd.title = std::to_string(NumCalledBy) + " calledby(s)";
+    Results.push_back(CodeLens{r, cmd});
   }
 
   return Results;

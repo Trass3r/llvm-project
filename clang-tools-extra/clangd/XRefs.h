@@ -80,6 +80,7 @@ std::vector<DocumentHighlight> findDocumentHighlights(ParsedAST &AST,
 
 struct ReferencesResult {
   std::vector<Location> References;
+  std::vector<index::SymbolRoleSet> Roles;
   bool HasMore = false;
 };
 /// Returns references of the symbol at a specified \p Pos.
