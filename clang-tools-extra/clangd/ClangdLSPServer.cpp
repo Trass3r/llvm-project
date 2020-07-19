@@ -165,7 +165,7 @@ llvm::Error validateEdits(const DraftStore &DraftMgr, const FileEdits &FE) {
 //  - cancellation handling
 //  - basic call tracing
 // MessageHandler ensures that initialize() is called before any other handler.
-class ClangdLSPServer::MessageHandler : public Transport::MessageHandler {
+class ClangdLSPServer::MessageHandler final : public Transport::MessageHandler {
 public:
   MessageHandler(ClangdLSPServer &Server) : Server(Server) {}
 
@@ -609,6 +609,10 @@ void ClangdLSPServer::onInitialize(const InitializeParams &Params,
              llvm::json::Object{
                  {"triggerCharacters", {"(", ","}},
              }},
+            {"codeLensProvider",
+             llvm::json::Object{
+                 {"resolveProvider", false},
+            }},
             {"declarationProvider", true},
             {"definitionProvider", true},
             {"documentHighlightProvider", true},
@@ -984,6 +988,19 @@ static llvm::Optional<Command> asCommand(const CodeAction &Action) {
   if (Action.kind && *Action.kind == CodeAction::QUICKFIX_KIND)
     Cmd.title = "Apply fix: " + Cmd.title;
   return Cmd;
+}
+
+void ClangdLSPServer::onCodeLens(const CodeLensParams &Params,
+                                   Callback<std::vector<CodeLens>> Reply) {
+  URIForFile FileURI = Params.textDocument.uri;
+  Server->provideCodeLens(
+      FileURI.file(), CCOpts.Limit,
+      [Reply = std::move(Reply)](
+          llvm::Expected<std::vector<CodeLens>> Refs) mutable {
+        if (!Refs)
+          return Reply(Refs.takeError());
+        return Reply(std::move(*Refs));
+      });
 }
 
 void ClangdLSPServer::onCodeAction(const CodeActionParams &Params,
@@ -1369,6 +1386,7 @@ ClangdLSPServer::ClangdLSPServer(
   MsgHandler->bind("textDocument/onTypeFormatting", &ClangdLSPServer::onDocumentOnTypeFormatting);
   MsgHandler->bind("textDocument/formatting", &ClangdLSPServer::onDocumentFormatting);
   MsgHandler->bind("textDocument/codeAction", &ClangdLSPServer::onCodeAction);
+  MsgHandler->bind("textDocument/codeLens", &ClangdLSPServer::onCodeLens);
   MsgHandler->bind("textDocument/completion", &ClangdLSPServer::onCompletion);
   MsgHandler->bind("textDocument/signatureHelp", &ClangdLSPServer::onSignatureHelp);
   MsgHandler->bind("textDocument/definition", &ClangdLSPServer::onGoToDefinition);

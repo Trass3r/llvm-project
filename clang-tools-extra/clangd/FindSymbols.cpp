@@ -188,7 +188,7 @@ public:
   /// Builds the document outline for the generated AST.
   std::vector<DocumentSymbol> build() {
     std::vector<DocumentSymbol> Results;
-    for (auto &TopLevel : AST.getLocalTopLevelDecls())
+    for (auto* TopLevel : AST.getLocalTopLevelDecls())
       traverseDecl(TopLevel, Results);
     return Results;
   }

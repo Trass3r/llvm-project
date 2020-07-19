@@ -58,7 +58,7 @@ namespace clangd {
 namespace {
 
 // Update the FileIndex with new ASTs and plumb the diagnostics responses.
-struct UpdateIndexCallbacks : public ParsingCallbacks {
+struct UpdateIndexCallbacks final : public ParsingCallbacks {
   UpdateIndexCallbacks(FileIndex *FIndex,
                        ClangdServer::Callbacks *ServerCallbacks,
                        bool TheiaSemanticHighlighting)
@@ -681,6 +681,18 @@ void ClangdServer::findReferences(PathRef File, Position Pos, uint32_t Limit,
     if (!InpAST)
       return CB(InpAST.takeError());
     CB(clangd::findReferences(InpAST->AST, Pos, Limit, Index));
+  };
+
+  WorkScheduler.runWithAST("References", File, std::move(Action));
+}
+
+void ClangdServer::provideCodeLens(PathRef File, uint32_t Limit,
+                                   Callback<std::vector<CodeLens>> CB) {
+  auto Action = [Limit, CB = std::move(CB),
+                 this](llvm::Expected<InputsAndAST> InpAST) mutable {
+    if (!InpAST)
+      return CB(InpAST.takeError());
+    CB(clangd::provideCodeLens(InpAST->AST, Limit, Index));
   };
 
   WorkScheduler.runWithAST("References", File, std::move(Action));

@@ -268,6 +268,10 @@ public:
                      const RenameOptions &RenameOpts,
                      Callback<llvm::Optional<Range>> CB);
 
+  /// Retrieve CodeLenses.
+  void provideCodeLens(PathRef File, uint32_t Limit,
+                       Callback<std::vector<CodeLens>> CB);
+
   /// Rename all occurrences of the symbol at the \p Pos in \p File to
   /// \p NewName.
   /// If WantFormat is false, the final TextEdit will be not formatted,

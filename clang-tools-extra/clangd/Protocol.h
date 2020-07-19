@@ -938,6 +938,16 @@ struct CodeAction {
 };
 llvm::json::Value toJSON(const CodeAction &);
 
+/// https://microsoft.github.io/language-server-protocol/specification#textDocument_codeLens
+struct CodeLensParams : DocumentSymbolParams {};
+
+struct CodeLens {
+  Range range;
+  Command command;
+};
+llvm::json::Value toJSON(const CodeLens &);
+llvm::raw_ostream &operator<<(llvm::raw_ostream &, const CodeLens &);
+
 /// Represents programming constructs like variables, classes, interfaces etc.
 /// that appear in a document. Document symbols can be hierarchical and they
 /// have two ranges: one that encloses its definition and one that points to its

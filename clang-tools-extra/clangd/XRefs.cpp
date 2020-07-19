@@ -1120,6 +1120,28 @@ ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
   return Results;
 }
 
+std::vector<CodeLens> provideCodeLens(ParsedAST &AST, uint32_t Limit,
+                                      const SymbolIndex *Index) {
+  auto &SM = AST.getSourceManager();
+  std::vector<CodeLens> Results;
+  for (auto *TopLevel : AST.getLocalTopLevelDecls()) {
+    auto res = findReferences(AST, sourceLocToPosition(SM, TopLevel->getLocation()),
+                              Limit, Index);
+    SourceLocation BeginLoc =
+        SM.getSpellingLoc(SM.getFileLoc(TopLevel->getBeginLoc()));
+    SourceLocation EndLoc =
+        SM.getSpellingLoc(SM.getFileLoc(TopLevel->getEndLoc()));
+    auto r = Range{sourceLocToPosition(SM, BeginLoc),
+                   sourceLocToPosition(SM, EndLoc)};
+    Command cmd;
+    cmd.command = "invalidcommand";
+    cmd.title = std::to_string(res.References.size()) + " references";
+    Results.push_back(CodeLens{r, std::move(cmd)});
+  }
+
+  return Results;
+}
+
 std::vector<SymbolDetails> getSymbolInfo(ParsedAST &AST, Position Pos) {
   const SourceManager &SM = AST.getSourceManager();
   auto CurLoc = sourceLocationInMainFile(SM, Pos);

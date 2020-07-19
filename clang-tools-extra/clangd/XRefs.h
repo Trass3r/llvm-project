@@ -87,6 +87,11 @@ struct ReferencesResult {
 ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
                                 const SymbolIndex *Index = nullptr);
 
+/// Returns CodeLenses for the current file.
+/// \p Limit limits the number of references to check (0 means no limit).
+std::vector<CodeLens> provideCodeLens(ParsedAST &AST, uint32_t Limit,
+                                      const SymbolIndex *Index = nullptr);
+
 /// Get info about symbols at \p Pos.
 std::vector<SymbolDetails> getSymbolInfo(ParsedAST &AST, Position Pos);
 

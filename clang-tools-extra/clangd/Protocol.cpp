@@ -712,6 +712,16 @@ llvm::json::Value toJSON(const CodeAction &CA) {
   return std::move(CodeAction);
 }
 
+llvm::json::Value toJSON(const CodeLens &CL) {
+  llvm::json::Object Result{{"range", CL.range},
+                            {"command", CL.command}};
+  return Result;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &O, const CodeLens &CL) {
+  return O << toJSON(CL);
+}
+
 llvm::raw_ostream &operator<<(llvm::raw_ostream &O, const DocumentSymbol &S) {
   return O << S.name << " - " << toJSON(S);
 }
