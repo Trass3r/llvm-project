@@ -686,13 +686,12 @@ void ClangdServer::findReferences(PathRef File, Position Pos, uint32_t Limit,
   WorkScheduler.runWithAST("References", File, std::move(Action));
 }
 
-void ClangdServer::provideCodeLens(PathRef File, uint32_t Limit,
-                                   Callback<std::vector<CodeLens>> CB) {
-  auto Action = [Limit, CB = std::move(CB),
+void ClangdServer::provideCodeLens(Position Pos, Callback<Command> CB) {
+  auto Action = [CB = std::move(CB),
                  this](llvm::Expected<InputsAndAST> InpAST) mutable {
     if (!InpAST)
       return CB(InpAST.takeError());
-    CB(clangd::provideCodeLens(InpAST->AST, Limit, Index));
+    CB(clangd::provideCodeLens(InpAST->AST, Pos, Index));
   };
 
   WorkScheduler.runWithAST("References", File, std::move(Action));

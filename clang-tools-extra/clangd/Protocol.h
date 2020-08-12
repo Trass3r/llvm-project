@@ -943,9 +943,10 @@ struct CodeLensParams : DocumentSymbolParams {};
 
 struct CodeLens {
   Range range;
-  Command command;
+  llvm::Optional<Command> command;
 };
 llvm::json::Value toJSON(const CodeLens &);
+bool fromJSON(const llvm::json::Value &, CodeLens &);
 llvm::raw_ostream &operator<<(llvm::raw_ostream &, const CodeLens &);
 
 /// Represents programming constructs like variables, classes, interfaces etc.

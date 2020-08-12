@@ -1123,7 +1123,7 @@ ReferencesResult findReferences(ParsedAST &AST, Position Pos, uint32_t Limit,
   return Results;
 }
 
-std::vector<CodeLens> provideCodeLens(ParsedAST &AST, uint32_t Limit,
+std::vector<CodeLens> provideCodeLens(ParsedAST &AST, Position Pos,
                                       const SymbolIndex *Index) {
   auto &SM = AST.getSourceManager();
   std::vector<CodeLens> Results;

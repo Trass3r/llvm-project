@@ -89,6 +89,7 @@ private:
                         Callback<llvm::json::Value>);
   void onCodeAction(const CodeActionParams &, Callback<llvm::json::Value>);
   void onCodeLens(const CodeLensParams &, Callback<std::vector<CodeLens>>);
+  void onCodeLensResolve(const CodeLens &, Callback<CodeLens>);
   void onCompletion(const CompletionParams &, Callback<CompletionList>);
   void onSignatureHelp(const TextDocumentPositionParams &,
                        Callback<SignatureHelp>);

@@ -713,9 +713,15 @@ llvm::json::Value toJSON(const CodeAction &CA) {
 }
 
 llvm::json::Value toJSON(const CodeLens &CL) {
-  llvm::json::Object Result{{"range", CL.range},
-                            {"command", CL.command}};
+  llvm::json::Object Result{{"range", CL.range}};
+  if (CL.command)
+    Result["command"] = *CL.command;
   return Result;
+}
+
+bool fromJSON(const llvm::json::Value &V, CodeLens &CL) {
+  llvm::json::ObjectMapper O(V);
+  return O && O.map("range", CL.range) && O.map("command", CL.command);
 }
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &O, const CodeLens &CL) {

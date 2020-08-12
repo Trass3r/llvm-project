@@ -268,9 +268,9 @@ public:
                      const RenameOptions &RenameOpts,
                      Callback<llvm::Optional<Range>> CB);
 
-  /// Retrieve CodeLenses.
-  void provideCodeLens(PathRef File, uint32_t Limit,
-                       Callback<std::vector<CodeLens>> CB);
+  /// Retrieve CodeLens.
+  void provideCodeLens(Position Pos,
+                       Callback<Command> CB);
 
   /// Rename all occurrences of the symbol at the \p Pos in \p File to
   /// \p NewName.
