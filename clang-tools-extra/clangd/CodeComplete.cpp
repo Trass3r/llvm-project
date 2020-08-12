@@ -1487,11 +1487,17 @@ public:
       auto Style = getFormatStyleForFile(SemaCCInput.FileName,
                                          SemaCCInput.ParseInput.Contents,
                                          *SemaCCInput.ParseInput.TFS);
-      const auto nextToken = Lexer::findNextToken(
-          Recorder->CCSema->getPreprocessor().getCodeCompletionLoc(),
-          Recorder->CCSema->getSourceManager(), Recorder->CCSema->LangOpts);
-      if (nextToken)
+      auto &SM = Recorder->CCSema->getSourceManager();
+      auto &&Loc = Recorder->CCSema->getPreprocessor().getCodeCompletionLoc();
+      const auto nextToken = Lexer::findNextToken(Loc, SM,
+                                                  Recorder->CCSema->LangOpts);
+      if (nextToken) {
         NextToken = *nextToken;
+        // try to fix broken Token.isAtStartOfLine()
+        const char* code = SM.getCharacterData(Loc);
+        if (*code != '\r' && *code != '\n')
+          NextToken.setFlagValue(Token::StartOfLine, false);
+      }
 
       // If preprocessor was run, inclusions from preprocessor callback should
       // already be added to Includes.
@@ -1507,7 +1513,6 @@ public:
       // that happens here (though the per-URI-scheme initialization is lazy).
       // The per-result proximity scoring is (amortized) very cheap.
       FileDistanceOptions ProxOpts{}; // Use defaults.
-      const auto &SM = Recorder->CCSema->getSourceManager();
       llvm::StringMap<SourceParams> ProxSources;
       auto MainFileID =
           Includes.getID(SM.getFileEntryForID(SM.getMainFileID()));
