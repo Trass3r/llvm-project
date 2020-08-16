@@ -21,6 +21,7 @@
 #define LLVM_CLANG_TOOLS_EXTRA_CLANGD_SEMANTICHIGHLIGHTING_H
 
 #include "Protocol.h"
+#include "llvm/ADT/BitmaskEnum.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -28,15 +29,12 @@ namespace clang {
 namespace clangd {
 class ParsedAST;
 
-enum class HighlightingKind {
+enum class HighlightingKind : uint8_t {
   Variable = 0,
-  LocalVariable,
   Parameter,
   Function,
   Method,
-  StaticMethod,
   Field,
-  StaticField,
   Class,
   Interface,
   Enum,
@@ -59,17 +57,23 @@ enum class HighlightingKind {
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingKind K);
 
-enum class HighlightingModifier {
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokenModifiers
+enum class HighlightingModifier : uint32_t {
   Declaration,
   // FIXME: Definition (needs findExplicitReferences support)
-  Deprecated,
-  Deduced,
   Readonly,
   Static,
+  Deprecated,
   Abstract,
+  Async,
+  Modification,
+  Documentation,
+  DefaultLibrary,
+  // end of standard modifiers
+  Deduced,
+  Inline,
   Virtual,
   DependentName,
-  DefaultLibrary,
   UsedAsMutableReference,
 
   FunctionScope,
@@ -77,8 +81,11 @@ enum class HighlightingModifier {
   FileScope,
   GlobalScope,
 
-  LastModifier = GlobalScope
+  LastModifier = GlobalScope,
+  //LLVM_MARK_AS_BITMASK_ENUM(LastModifier)
 };
+//LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
+
 static_assert(static_cast<unsigned>(HighlightingModifier::LastModifier) < 32,
               "Increase width of modifiers bitfield!");
 llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingModifier K);

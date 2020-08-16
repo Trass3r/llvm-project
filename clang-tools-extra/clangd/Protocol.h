@@ -1662,9 +1662,9 @@ struct SemanticToken {
   /// the length of the token. A token cannot be multiline
   unsigned length = 0;
   /// will be looked up in `SemanticTokensLegend.tokenTypes`
-  unsigned tokenType = 0;
+  uint8_t tokenType = 0;
   /// each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
-  unsigned tokenModifiers = 0;
+  uint32_t tokenModifiers = 0;
 };
 bool operator==(const SemanticToken &, const SemanticToken &);
 

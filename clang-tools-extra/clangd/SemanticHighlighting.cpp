@@ -119,10 +119,9 @@ kindForDecl(const NamedDecl *D, const HeuristicResolver *Resolver) {
   if (auto *VD = dyn_cast<VarDecl>(D)) {
     if (isa<ImplicitParamDecl>(VD)) // e.g. ObjC Self
       return llvm::None;
-    return VD->isStaticDataMember()
-               ? HighlightingKind::StaticField
-               : VD->isLocalVarDecl() ? HighlightingKind::LocalVariable
-                                      : HighlightingKind::Variable;
+	if (VD->isInitCapture() || VD->isStaticDataMember()) // TODO: static modifier covered on the latter?
+      return HighlightingKind::Field;
+    return HighlightingKind::Variable;
   }
   if (const auto *BD = dyn_cast<BindingDecl>(D))
     return BD->getDeclContext()->isFunctionOrMethod()
@@ -174,6 +173,7 @@ bool isConst(QualType T) {
   if (isConst(T->getPointeeType()))
     return true;
   return false;
+  //     if (VD->isConstexpr())
 }
 
 // Whether D is const in a loose sense (should it be highlighted as such?)
@@ -342,7 +342,8 @@ class HighlightingsBuilder {
 public:
   HighlightingsBuilder(const ParsedAST &AST)
       : TB(AST.getTokens()), SourceMgr(AST.getSourceManager()),
-        LangOpts(AST.getLangOpts()) {}
+        LangOpts(AST.getLangOpts()) {
+    Tokens.reserve(TB.expandedTokens().size());
 
   HighlightingToken &addToken(SourceLocation Loc, HighlightingKind Kind) {
     auto Range = getRangeForSourceLocation(Loc);
@@ -521,7 +522,7 @@ llvm::Optional<HighlightingModifier> scopeModifier(const Type *T) {
 
 /// Produces highlightings, which are not captured by findExplicitReferences,
 /// e.g. highlights dependent names and 'auto' as the underlying type.
-class CollectExtraHighlightings
+class CollectExtraHighlightings final
     : public RecursiveASTVisitor<CollectExtraHighlightings> {
   using Base = RecursiveASTVisitor<CollectExtraHighlightings>;
 
@@ -847,10 +848,14 @@ std::vector<HighlightingToken> getSemanticHighlightings(ParsedAST &AST) {
             Tok.addModifier(*Mod);
           if (isConst(Decl))
             Tok.addModifier(HighlightingModifier::Readonly);
-          if (isStatic(Decl))
+          if (isStatic(Decl)) // covered
             Tok.addModifier(HighlightingModifier::Static);
           if (isAbstract(Decl))
             Tok.addModifier(HighlightingModifier::Abstract);
+          if (isAsync(Decl))
+            Tok.addModifier(HighlightingModifier::Async);
+          if (isInline(Decl))
+            Tok.addModifier(HighlightingModifier::Inline);
           if (isVirtual(Decl))
             Tok.addModifier(HighlightingModifier::Virtual);
           if (isDependent(Decl))
@@ -887,20 +892,14 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingKind K) {
   switch (K) {
   case HighlightingKind::Variable:
     return OS << "Variable";
-  case HighlightingKind::LocalVariable:
-    return OS << "LocalVariable";
   case HighlightingKind::Parameter:
     return OS << "Parameter";
   case HighlightingKind::Function:
     return OS << "Function";
   case HighlightingKind::Method:
     return OS << "Method";
-  case HighlightingKind::StaticMethod:
-    return OS << "StaticMethod";
   case HighlightingKind::Field:
     return OS << "Field";
-  case HighlightingKind::StaticField:
-    return OS << "StaticField";
   case HighlightingKind::Class:
     return OS << "Class";
   case HighlightingKind::Interface:
@@ -1018,8 +1017,6 @@ toSemanticTokens(llvm::ArrayRef<HighlightingToken> Tokens,
 llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
   switch (Kind) {
   case HighlightingKind::Variable:
-  case HighlightingKind::LocalVariable:
-  case HighlightingKind::StaticField:
     return "variable";
   case HighlightingKind::Parameter:
     return "parameter";
@@ -1027,9 +1024,6 @@ llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
     return "function";
   case HighlightingKind::Method:
     return "method";
-  case HighlightingKind::StaticMethod:
-    // FIXME: better method with static modifier?
-    return "function";
   case HighlightingKind::Field:
     return "property";
   case HighlightingKind::Class:
@@ -1042,6 +1036,7 @@ llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
     return "enumMember";
   case HighlightingKind::Typedef:
   case HighlightingKind::Type:
+  case HighlightingKind::Primitive:
     return "type";
   case HighlightingKind::Unknown:
     return "unknown"; // nonstandard
@@ -1051,8 +1046,6 @@ llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
     return "typeParameter";
   case HighlightingKind::Concept:
     return "concept"; // nonstandard
-  case HighlightingKind::Primitive:
-    return "type";
   case HighlightingKind::Macro:
     return "macro";
   case HighlightingKind::InactiveCode:
@@ -1077,6 +1070,14 @@ llvm::StringRef toSemanticTokenModifier(HighlightingModifier Modifier) {
     return "abstract";
   case HighlightingModifier::Virtual:
     return "virtual";
+  case HighlightingModifier::Async:
+    return "async";
+  case HighlightingModifier::Modification:
+    return "modification";
+  case HighlightingModifier::Documentation:
+    return "documentation";
+  case HighlightingModifier::Inline:
+    return "inline"; // nonstandard
   case HighlightingModifier::DependentName:
     return "dependentName"; // nonstandard
   case HighlightingModifier::DefaultLibrary:

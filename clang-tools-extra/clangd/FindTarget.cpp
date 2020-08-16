@@ -943,7 +943,7 @@ refInTypeLoc(TypeLoc L, const HeuristicResolver *Resolver) {
   return V.Refs;
 }
 
-class ExplicitReferenceCollector
+class ExplicitReferenceCollector final
     : public RecursiveASTVisitor<ExplicitReferenceCollector> {
 public:
   ExplicitReferenceCollector(llvm::function_ref<void(ReferenceLoc)> Out,
