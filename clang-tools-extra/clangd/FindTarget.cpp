@@ -949,7 +949,7 @@ llvm::SmallVector<ReferenceLoc, 2> refInTypeLoc(TypeLoc L) {
   return {*V.Ref};
 }
 
-class ExplicitReferenceCollector
+class ExplicitReferenceCollector final
     : public RecursiveASTVisitor<ExplicitReferenceCollector> {
 public:
   ExplicitReferenceCollector(llvm::function_ref<void(ReferenceLoc)> Out)

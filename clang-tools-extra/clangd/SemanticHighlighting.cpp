@@ -23,6 +23,7 @@
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Lex/Token.h"
 #include "clang/Tooling/Syntax/Tokens.h"
 #include "llvm/ADT/None.h"
 #include "llvm/ADT/Optional.h"
@@ -30,6 +31,7 @@
 #include "llvm/Support/Base64.h"
 #include "llvm/Support/Casting.h"
 #include <algorithm>
+#include <type_traits>
 
 namespace clang {
 namespace clangd {
@@ -45,8 +47,8 @@ bool canHighlightName(DeclarationName Name) {
   return II && !II->getName().empty();
 }
 
-llvm::Optional<HighlightingKind> kindForType(const Type *TP);
-llvm::Optional<HighlightingKind> kindForDecl(const NamedDecl *D) {
+llvm::Optional<RawSemanticToken> tokenForType(QualType QTP);
+llvm::Optional<RawSemanticToken> tokenForDecl(const NamedDecl *D) {
   if (auto *USD = dyn_cast<UsingShadowDecl>(D)) {
     if (auto *Target = USD->getTargetDecl())
       D = Target;
@@ -55,75 +57,123 @@ llvm::Optional<HighlightingKind> kindForDecl(const NamedDecl *D) {
     if (auto *Templated = TD->getTemplatedDecl())
       D = Templated;
   }
+
   if (auto *TD = dyn_cast<TypedefNameDecl>(D)) {
     // We try to highlight typedefs as their underlying type.
-    if (auto K = kindForType(TD->getUnderlyingType().getTypePtrOrNull()))
+    if (auto K = tokenForType(TD->getUnderlyingType()))
       return K;
     // And fallback to a generic kind if this fails.
-    return HighlightingKind::Typedef;
+    return {HighlightingKind::Typedef};
   }
+
+  SemanticTokenModifiers Mod = SemanticTokenModifiers::Declaration;
+  if (D->getDeclContext()->isStdNamespace())
+    Mod |= SemanticTokenModifiers::DefaultLibrary;
+
   // We highlight class decls, constructor decls and destructor decls as
   // `Class` type. The destructor decls are handled in `VisitTagTypeLoc` (we
   // will visit a TypeLoc where the underlying Type is a CXXRecordDecl).
   if (auto *RD = llvm::dyn_cast<RecordDecl>(D)) {
     // We don't want to highlight lambdas like classes.
     if (RD->isLambda())
-      return llvm::None;
-    return HighlightingKind::Class;
+      return {{HighlightingKind::Method, Mod}};
+    return {{HighlightingKind::Class, Mod}};
   }
   if (isa<ClassTemplateDecl>(D) || isa<RecordDecl>(D) ||
       isa<CXXConstructorDecl>(D))
-    return HighlightingKind::Class;
-  if (auto *MD = dyn_cast<CXXMethodDecl>(D))
-    return MD->isStatic() ? HighlightingKind::StaticMethod
-                          : HighlightingKind::Method;
+    return {{HighlightingKind::Class, Mod}};
+  if (auto MD = dyn_cast<CXXMethodDecl>(D)) {
+    if (MD->isStatic())
+      Mod |= SemanticTokenModifiers::Static;
+    else {
+      if (MD->isConst())
+        Mod |= SemanticTokenModifiers::Readonly;
+      if (MD->isPure())
+        Mod |= SemanticTokenModifiers::Abstract;
+    }
+    return {{HighlightingKind::Method, Mod}};
+  }
   if (isa<FieldDecl>(D))
-    return HighlightingKind::Field;
+    return {{HighlightingKind::Field, Mod}};
   if (isa<EnumDecl>(D))
-    return HighlightingKind::Enum;
+    return {{HighlightingKind::Enum, Mod}};
   if (isa<EnumConstantDecl>(D))
-    return HighlightingKind::EnumConstant;
-  if (isa<ParmVarDecl>(D))
-    return HighlightingKind::Parameter;
-  if (auto *VD = dyn_cast<VarDecl>(D))
-    return VD->isStaticDataMember()
-               ? HighlightingKind::StaticField
-               : VD->isLocalVarDecl() ? HighlightingKind::LocalVariable
-                                      : HighlightingKind::Variable;
-  if (const auto *BD = dyn_cast<BindingDecl>(D))
-    return BD->getDeclContext()->isFunctionOrMethod()
-               ? HighlightingKind::LocalVariable
-               : HighlightingKind::Variable;
-  if (isa<FunctionDecl>(D))
-    return HighlightingKind::Function;
+    return {HighlightingKind::EnumConstant};
+  if (auto PVD = dyn_cast<ParmVarDecl>(D)) {
+    if (PVD->getType()->isFunctionType())
+      return {{HighlightingKind::Function, Mod}};
+
+    return {{HighlightingKind::Parameter, Mod}};
+  }
+  if (auto *VD = dyn_cast<VarDecl>(D)) {
+    RawSemanticToken Token(VD->isInitCapture() ? HighlightingKind::Field
+                                               : HighlightingKind::Variable);
+    if (VD->isStaticDataMember() || VD->isStaticLocal())
+      Mod |= SemanticTokenModifiers::Static;
+    else if (VD->isInline())
+      Mod |= SemanticTokenModifiers::Inline;
+    if (VD->isConstexpr())
+      Mod |= SemanticTokenModifiers::Readonly;
+    auto TypeToken = tokenForType(VD->getType());
+    if (TypeToken)
+      Mod |= TypeToken->Mod;
+    Token.Mod = Mod;
+    return Token;
+  }
+  if (const auto *BD = dyn_cast<BindingDecl>(D)) {
+    auto TypeToken = tokenForType(BD->getType());
+    if (TypeToken)
+      Mod |= TypeToken->Mod;
+    if (!BD->getDeclContext()->isFunctionOrMethod())
+      Mod |= SemanticTokenModifiers::Static;
+    return {{HighlightingKind::Variable, Mod}};
+  }
+  if (auto FD = dyn_cast<FunctionDecl>(D)) {
+    if (FD->isConstexpr())
+      Mod |= SemanticTokenModifiers::Readonly;
+    if (!FD->isGlobal())
+      Mod |= SemanticTokenModifiers::Static;
+    return {{HighlightingKind::Function, Mod}};
+  }
   if (isa<NamespaceDecl>(D) || isa<NamespaceAliasDecl>(D) ||
       isa<UsingDirectiveDecl>(D))
-    return HighlightingKind::Namespace;
+    return {{HighlightingKind::Namespace, Mod}};
   if (isa<TemplateTemplateParmDecl>(D) || isa<TemplateTypeParmDecl>(D) ||
       isa<NonTypeTemplateParmDecl>(D))
-    return HighlightingKind::TemplateParameter;
+    return {{HighlightingKind::TemplateParameter, Mod}};
   if (isa<ConceptDecl>(D))
-    return HighlightingKind::Concept;
-  return llvm::None;
-}
-llvm::Optional<HighlightingKind> kindForType(const Type *TP) {
-  if (!TP)
-    return llvm::None;
-  if (TP->isBuiltinType()) // Builtins are special, they do not have decls.
-    return HighlightingKind::Primitive;
-  if (auto *TD = dyn_cast<TemplateTypeParmType>(TP))
-    return kindForDecl(TD->getDecl());
-  if (auto *TD = TP->getAsTagDecl())
-    return kindForDecl(TD);
+    return {{HighlightingKind::Concept, Mod}};
   return llvm::None;
 }
 
-llvm::Optional<HighlightingKind> kindForReference(const ReferenceLoc &R) {
-  llvm::Optional<HighlightingKind> Result;
+llvm::Optional<RawSemanticToken> tokenForType(QualType QTP) {
+  const Type *TP = QTP.getTypePtrOrNull();
+  if (!TP)
+    return llvm::None;
+  auto Mod = SemanticTokenModifiers::None;
+  if (QTP.isConstQualified())
+    Mod = SemanticTokenModifiers::Readonly;
+
+  // also support the typical const & or const *
+  if (!TP->getPointeeType().isNull()) {
+    if (TP->getPointeeType().isConstQualified())
+      Mod = SemanticTokenModifiers::Readonly;
+  }
+  if (TP->isBuiltinType()) // Builtins are special, they do not have decls.
+    return {{HighlightingKind::Primitive, Mod}};
+  if (auto *TD = dyn_cast<TemplateTypeParmType>(TP))
+    return tokenForDecl(TD->getDecl());
+  if (auto *TD = TP->getAsTagDecl())
+    return tokenForDecl(TD);
+  return llvm::None;
+}
+
+llvm::Optional<RawSemanticToken> tokenForReference(const ReferenceLoc &R) {
+  llvm::Optional<RawSemanticToken> Result;
   for (const NamedDecl *Decl : R.Targets) {
     if (!canHighlightName(Decl->getDeclName()))
       return llvm::None;
-    auto Kind = kindForDecl(Decl);
+    auto Kind = tokenForDecl(Decl);
     if (!Kind || (Result && Kind != Result))
       return llvm::None;
     Result = Kind;
@@ -180,11 +230,17 @@ class HighlightingsBuilder {
 public:
   HighlightingsBuilder(const ParsedAST &AST)
       : TB(AST.getTokens()), SourceMgr(AST.getSourceManager()),
-        LangOpts(AST.getLangOpts()) {}
+        LangOpts(AST.getLangOpts()) {
+    Tokens.reserve(TB.expandedTokens().size());
+  }
 
   void addToken(HighlightingToken T) { Tokens.push_back(T); }
+  void addToken(SourceLocation Loc, HighlightingKind Kind,
+                SemanticTokenModifiers Mod = SemanticTokenModifiers::None) {
+    addToken(Loc, {Kind, Mod});
+  }
 
-  void addToken(SourceLocation Loc, HighlightingKind Kind) {
+  void addToken(SourceLocation Loc, RawSemanticToken Token) {
     Loc = getHighlightableSpellingToken(Loc, SourceMgr);
     if (Loc.isInvalid())
       return;
@@ -193,7 +249,7 @@ public:
 
     auto Range = halfOpenToRange(SourceMgr,
                                  Tok->range(SourceMgr).toCharRange(SourceMgr));
-    Tokens.push_back(HighlightingToken{Kind, std::move(Range)});
+    Tokens.push_back(HighlightingToken{Token.Kind, Token.Mod, std::move(Range)});
   }
 
   std::vector<HighlightingToken> collect(ParsedAST &AST) && {
@@ -231,7 +287,7 @@ public:
         // zero. The client will treat this highlighting kind specially, and
         // highlight the entire line visually (i.e. not just to where the text
         // on the line ends, but to the end of the screen).
-        NonConflicting.push_back({HighlightingKind::InactiveCode,
+        NonConflicting.push_back({HighlightingKind::InactiveCode, SemanticTokenModifiers::None,
                                   {Position{Line, 0}, Position{Line, 0}}});
       }
     }
@@ -249,13 +305,13 @@ private:
 
 /// Produces highlightings, which are not captured by findExplicitReferences,
 /// e.g. highlights dependent names and 'auto' as the underlying type.
-class CollectExtraHighlightings
+class CollectExtraHighlightings final
     : public RecursiveASTVisitor<CollectExtraHighlightings> {
 public:
   CollectExtraHighlightings(HighlightingsBuilder &H) : H(H) {}
 
   bool VisitDecltypeTypeLoc(DecltypeTypeLoc L) {
-    if (auto K = kindForType(L.getTypePtr()))
+    if (auto K = tokenForType(L.getTypePtr()->getUnderlyingType()))
       H.addToken(L.getBeginLoc(), *K);
     return true;
   }
@@ -264,7 +320,7 @@ public:
     auto *AT = D->getType()->getContainedAutoType();
     if (!AT)
       return true;
-    if (auto K = kindForType(AT->getDeducedType().getTypePtrOrNull()))
+    if (auto K = tokenForType(AT->getDeducedType()))
       H.addToken(D->getTypeSpecStartLoc(), *K);
     return true;
   }
@@ -355,20 +411,22 @@ std::vector<HighlightingToken> getSemanticHighlightings(ParsedAST &AST) {
   auto &C = AST.getASTContext();
   // Add highlightings for AST nodes.
   HighlightingsBuilder Builder(AST);
+
   // Highlight 'decltype' and 'auto' as their underlying types.
   CollectExtraHighlightings(Builder).TraverseAST(C);
   // Highlight all decls and references coming from the AST.
   findExplicitReferences(C, [&](ReferenceLoc R) {
-    if (auto Kind = kindForReference(R))
+    if (auto Kind = tokenForReference(R))
       Builder.addToken(R.NameLoc, *Kind);
   });
   // Add highlightings for macro references.
   for (const auto &SIDToRefs : AST.getMacros().MacroRefs) {
     for (const auto &M : SIDToRefs.second)
-      Builder.addToken({HighlightingKind::Macro, M});
+      Builder.addToken({HighlightingKind::Macro, SemanticTokenModifiers::None, M});
   }
   for (const auto &M : AST.getMacros().UnknownMacros)
-    Builder.addToken({HighlightingKind::Macro, M});
+    Builder.addToken(
+        {HighlightingKind::Macro, SemanticTokenModifiers::None, M});
 
   return std::move(Builder).collect(AST);
 }
@@ -377,20 +435,14 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingKind K) {
   switch (K) {
   case HighlightingKind::Variable:
     return OS << "Variable";
-  case HighlightingKind::LocalVariable:
-    return OS << "LocalVariable";
   case HighlightingKind::Parameter:
     return OS << "Parameter";
   case HighlightingKind::Function:
     return OS << "Function";
   case HighlightingKind::Method:
     return OS << "Method";
-  case HighlightingKind::StaticMethod:
-    return OS << "StaticMethod";
   case HighlightingKind::Field:
     return OS << "Field";
-  case HighlightingKind::StaticField:
-    return OS << "StaticField";
   case HighlightingKind::Class:
     return OS << "Class";
   case HighlightingKind::Enum:
@@ -415,6 +467,32 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingKind K) {
     return OS << "Macro";
   case HighlightingKind::InactiveCode:
     return OS << "InactiveCode";
+  }
+  llvm_unreachable("invalid HighlightingKind");
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, SemanticTokenModifiers M) {
+  switch (M) {
+  case SemanticTokenModifiers::Declaration:
+    return OS << "Declaration";
+  case SemanticTokenModifiers::Definition:
+    return OS << "Definition";
+  case SemanticTokenModifiers::Readonly:
+    return OS << "Readonly";
+  case SemanticTokenModifiers::Static:
+    return OS << "Static";
+  case SemanticTokenModifiers::Deprecated:
+    return OS << "Deprecated";
+  case SemanticTokenModifiers::Abstract:
+    return OS << "Abstract";
+  case SemanticTokenModifiers::Async:
+    return OS << "Async";
+  case SemanticTokenModifiers::Modification:
+    return OS << "Modification";
+  case SemanticTokenModifiers::Documentation:
+    return OS << "Documentation";
+  case SemanticTokenModifiers::DefaultLibrary:
+    return OS << "DefaultLibrary";
   }
   llvm_unreachable("invalid HighlightingKind");
 }
@@ -478,10 +556,10 @@ diffHighlightings(ArrayRef<HighlightingToken> New,
 }
 
 bool operator==(const HighlightingToken &L, const HighlightingToken &R) {
-  return std::tie(L.R, L.Kind) == std::tie(R.R, R.Kind);
+  return std::tie(L.R, L.Kind, L.Mod) == std::tie(R.R, R.Kind, R.Mod);
 }
 bool operator<(const HighlightingToken &L, const HighlightingToken &R) {
-  return std::tie(L.R, L.Kind) < std::tie(R.R, R.Kind);
+  return std::tie(L.R, L.Kind, L.Mod) < std::tie(R.R, R.Kind, R.Mod);
 }
 bool operator==(const LineHighlightings &L, const LineHighlightings &R) {
   return std::tie(L.Line, L.Tokens) == std::tie(R.Line, R.Tokens);
@@ -514,7 +592,10 @@ toSemanticTokens(llvm::ArrayRef<HighlightingToken> Tokens) {
     }
     assert(Tok.R.end.line == Tok.R.start.line);
     Out.length = Tok.R.end.character - Tok.R.start.character;
-    Out.tokenType = static_cast<unsigned>(Tok.Kind);
+    Out.tokenType =
+        static_cast<std::underlying_type_t<decltype(Tok.Kind)>>(Tok.Kind);
+    Out.tokenModifiers =
+        static_cast<std::underlying_type_t<decltype(Tok.Mod)>>(Tok.Mod);
 
     Last = &Tok;
   }
@@ -523,18 +604,12 @@ toSemanticTokens(llvm::ArrayRef<HighlightingToken> Tokens) {
 llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
   switch (Kind) {
   case HighlightingKind::Variable:
-  case HighlightingKind::LocalVariable:
-  case HighlightingKind::StaticField:
     return "variable";
   case HighlightingKind::Parameter:
     return "parameter";
   case HighlightingKind::Function:
     return "function";
   case HighlightingKind::Method:
-    return "member";
-  case HighlightingKind::StaticMethod:
-    // FIXME: better function/member with static modifier?
-    return "function";
   case HighlightingKind::Field:
     return "member";
   case HighlightingKind::Class:
@@ -542,11 +617,11 @@ llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
   case HighlightingKind::Enum:
     return "enum";
   case HighlightingKind::EnumConstant:
-    return "enumConstant"; // nonstandard
+    return "enumMember";
   case HighlightingKind::Typedef:
+  case HighlightingKind::Primitive:
     return "type";
   case HighlightingKind::DependentType:
-    return "dependent"; // nonstandard
   case HighlightingKind::DependentName:
     return "dependent"; // nonstandard
   case HighlightingKind::Namespace:
@@ -555,8 +630,6 @@ llvm::StringRef toSemanticTokenType(HighlightingKind Kind) {
     return "typeParameter";
   case HighlightingKind::Concept:
     return "concept"; // nonstandard
-  case HighlightingKind::Primitive:
-    return "type";
   case HighlightingKind::Macro:
     return "macro";
   case HighlightingKind::InactiveCode:
@@ -602,18 +675,12 @@ llvm::StringRef toTextMateScope(HighlightingKind Kind) {
     return "entity.name.function.cpp";
   case HighlightingKind::Method:
     return "entity.name.function.method.cpp";
-  case HighlightingKind::StaticMethod:
-    return "entity.name.function.method.static.cpp";
   case HighlightingKind::Variable:
     return "variable.other.cpp";
-  case HighlightingKind::LocalVariable:
-    return "variable.other.local.cpp";
   case HighlightingKind::Parameter:
     return "variable.parameter.cpp";
   case HighlightingKind::Field:
     return "variable.other.field.cpp";
-  case HighlightingKind::StaticField:
-    return "variable.other.field.static.cpp";
   case HighlightingKind::Class:
     return "entity.name.type.class.cpp";
   case HighlightingKind::Enum:

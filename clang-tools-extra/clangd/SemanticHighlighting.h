@@ -32,20 +32,20 @@
 
 #include "Protocol.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/BitmaskEnum.h"
+#include <stdint.h>
+#include <vector>
 
 namespace clang {
 namespace clangd {
 class ParsedAST;
 
-enum class HighlightingKind {
+enum class HighlightingKind : uint8_t {
   Variable = 0,
-  LocalVariable,
   Parameter,
   Function,
   Method,
-  StaticMethod,
   Field,
-  StaticField,
   Class,
   Enum,
   EnumConstant,
@@ -66,10 +66,44 @@ enum class HighlightingKind {
 };
 llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, HighlightingKind K);
 
+enum class SemanticTokenModifiers : uint16_t {
+  None = 0,
+  Declaration = 1,
+  Definition = 2,
+  Readonly = 4,
+  Static = 8,
+  Deprecated = 1 << 4,
+  Abstract = 1 << 5,
+  Async = 1 << 6,
+  Modification = 1 << 7,
+  Documentation = 1 << 8,
+  DefaultLibrary = 1 << 9,
+  Inline = 1 << 10,
+  LastMod = Inline,
+  LLVM_MARK_AS_BITMASK_ENUM(LastMod)
+};
+LLVM_ENABLE_BITMASK_ENUMS_IN_NAMESPACE();
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, SemanticTokenModifiers K);
+
+struct RawSemanticToken {
+  HighlightingKind Kind = HighlightingKind::Variable;
+  SemanticTokenModifiers Mod = SemanticTokenModifiers::None;
+
+  RawSemanticToken(HighlightingKind Kind,
+                   SemanticTokenModifiers Mod = SemanticTokenModifiers::None)
+      : Kind(Kind), Mod(Mod) {}
+  bool operator==(RawSemanticToken O) const {
+    return Kind == O.Kind && Mod == O.Mod;
+  }
+};
+
 // Contains all information needed for the highlighting a token.
-struct HighlightingToken {
-  HighlightingKind Kind;
+struct HighlightingToken : RawSemanticToken {
   Range R;
+
+  HighlightingToken(HighlightingKind Kind, SemanticTokenModifiers Mod, Range R)
+      : RawSemanticToken{Kind, Mod}, R(R) {}
 };
 
 bool operator==(const HighlightingToken &L, const HighlightingToken &R);
@@ -88,7 +122,8 @@ bool operator==(const LineHighlightings &L, const LineHighlightings &R);
 // main AST.
 std::vector<HighlightingToken> getSemanticHighlightings(ParsedAST &AST);
 
-std::vector<SemanticToken> toSemanticTokens(llvm::ArrayRef<HighlightingToken>);
+std::vector<SemanticToken>
+    toSemanticTokens(llvm::ArrayRef<HighlightingToken>);
 llvm::StringRef toSemanticTokenType(HighlightingKind Kind);
 std::vector<SemanticTokensEdit> diffTokens(llvm::ArrayRef<SemanticToken> Before,
                                            llvm::ArrayRef<SemanticToken> After);
