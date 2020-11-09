@@ -426,6 +426,7 @@ void ClangdLSPServer::notify(llvm::StringRef Method, llvm::json::Value Params) {
 
 static std::vector<llvm::StringRef> semanticTokenTypes() {
   std::vector<llvm::StringRef> Types;
+  Types.reserve(static_cast<unsigned>(HighlightingKind::LastKind) + 1);
   for (unsigned I = 0; I <= static_cast<unsigned>(HighlightingKind::LastKind);
        ++I)
     Types.push_back(toSemanticTokenType(static_cast<HighlightingKind>(I)));

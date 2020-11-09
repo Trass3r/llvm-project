@@ -89,11 +89,15 @@ kindForDecl(const NamedDecl *D, const HeuristicResolver *Resolver) {
   // We highlight class decls, constructor decls and destructor decls as
   // `Class` type. The destructor decls are handled in `VisitTagTypeLoc` (we
   // will visit a TypeLoc where the underlying Type is a CXXRecordDecl).
-  if (auto *RD = llvm::dyn_cast<RecordDecl>(D)) {
+  if (auto *RD = llvm::dyn_cast<CXXRecordDecl>(D)) {
     // We don't want to highlight lambdas like classes.
     if (RD->isLambda())
-      return llvm::None;
-    return HighlightingKind::Class;
+      return {{HighlightingKind::Method, Mod}};
+    if (RD->isAbstract())
+      Mod |= SemanticTokenModifiers::Abstract;
+    if (RD->getDescribedTemplate())
+      Mod |= SemanticTokenModifiers::Template;
+    return {{HighlightingKind::Class, Mod}};
   }
   if (isa<ClassTemplateDecl, RecordDecl, CXXConstructorDecl, ObjCInterfaceDecl,
           ObjCImplementationDecl>(D))
@@ -113,9 +117,14 @@ kindForDecl(const NamedDecl *D, const HeuristicResolver *Resolver) {
   if (isa<EnumDecl>(D))
     return HighlightingKind::Enum;
   if (isa<EnumConstantDecl>(D))
-    return HighlightingKind::EnumConstant;
-  if (isa<ParmVarDecl>(D))
-    return HighlightingKind::Parameter;
+    return {{HighlightingKind::EnumConstant,
+             Mod | SemanticTokenModifiers::Readonly}};
+  if (auto PVD = dyn_cast<ParmVarDecl>(D)) {
+    if (PVD->getType()->isFunctionType())
+      return {{HighlightingKind::Function, Mod}};
+
+    return {{HighlightingKind::Parameter, Mod}};
+  }
   if (auto *VD = dyn_cast<VarDecl>(D)) {
     if (isa<ImplicitParamDecl>(VD)) // e.g. ObjC Self
       return llvm::None;
@@ -123,12 +132,23 @@ kindForDecl(const NamedDecl *D, const HeuristicResolver *Resolver) {
       return HighlightingKind::Field;
     return HighlightingKind::Variable;
   }
-  if (const auto *BD = dyn_cast<BindingDecl>(D))
-    return BD->getDeclContext()->isFunctionOrMethod()
-               ? HighlightingKind::LocalVariable
-               : HighlightingKind::Variable;
-  if (isa<FunctionDecl>(D))
-    return HighlightingKind::Function;
+  if (const auto *BD = dyn_cast<BindingDecl>(D)) {
+    auto TypeToken = tokenForType(BD->getType());
+    if (TypeToken)
+      Mod |= TypeToken->Mod;
+    if (!BD->getDeclContext()->isFunctionOrMethod())
+      Mod |= SemanticTokenModifiers::Static;
+    return {{HighlightingKind::Variable, Mod}};
+  }
+  if (auto FD = dyn_cast<FunctionDecl>(D)) {
+    if (FD->isConstexpr())
+      Mod |= SemanticTokenModifiers::Readonly;
+    if (FD->isTemplateInstantiation())
+      Mod |= SemanticTokenModifiers::Readonly;
+    if (!FD->isGlobal())
+      Mod |= SemanticTokenModifiers::Static;
+    return {{HighlightingKind::Function, Mod}};
+  }
   if (isa<NamespaceDecl>(D) || isa<NamespaceAliasDecl>(D) ||
       isa<UsingDirectiveDecl>(D))
     return HighlightingKind::Namespace;
@@ -150,6 +170,16 @@ llvm::Optional<HighlightingKind>
 kindForType(const Type *TP, const HeuristicResolver *Resolver) {
   if (!TP)
     return llvm::None;
+  auto Mod = SemanticTokenModifiers::None;
+
+  if (QTP.isConstQualified())
+    Mod = SemanticTokenModifiers::Readonly;
+
+  // also support the typical const & or const *
+  if (!TP->getPointeeType().isNull()) {
+    if (TP->getPointeeType().isConstQualified())
+      Mod = SemanticTokenModifiers::Readonly;
+  }
   if (TP->isBuiltinType()) // Builtins are special, they do not have decls.
     return HighlightingKind::Primitive;
   if (auto *TD = dyn_cast<TemplateTypeParmType>(TP))
@@ -952,6 +982,7 @@ toSemanticTokens(llvm::ArrayRef<HighlightingToken> Tokens,
                  llvm::StringRef Code) {
   assert(llvm::is_sorted(Tokens));
   std::vector<SemanticToken> Result;
+  Result.reserve(Tokens.size()); // TODO: don't use push_back, just []
   // In case we split a HighlightingToken into multiple tokens (e.g. because it
   // was spanning multiple lines), this tracks the last one. This prevents
   // having a copy all the time.

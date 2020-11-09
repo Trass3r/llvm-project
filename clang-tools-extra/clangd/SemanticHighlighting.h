@@ -72,6 +72,7 @@ enum class HighlightingModifier : uint32_t {
   // end of standard modifiers
   Deduced,
   Inline,
+  Template,
   Virtual,
   DependentName,
   UsedAsMutableReference,
