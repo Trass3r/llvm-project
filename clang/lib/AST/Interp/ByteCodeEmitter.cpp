@@ -12,20 +12,32 @@
 #include "Floating.h"
 #include "Opcode.h"
 #include "Program.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTLambda.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/Basic/Builtins.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/TimeProfiler.h"
 #include <type_traits>
 
 using namespace clang;
 using namespace clang::interp;
 
 Function *ByteCodeEmitter::compileFunc(const FunctionDecl *FuncDecl) {
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, [&]() {
+    std::string Name;
+    llvm::raw_string_ostream OS(Name);
+    FuncDecl->getNameForDiagnostic(OS, Ctx.getASTContext().getPrintingPolicy(),
+                                   /*Qualified=*/true);
+    return Name;
+  });
+
   // Set up argument indices.
   unsigned ParamOffset = 0;
   SmallVector<PrimType, 8> ParamTypes;
   SmallVector<unsigned, 8> ParamOffsets;
   llvm::DenseMap<unsigned, Function::ParamDescriptor> ParamDescriptors;
+
 
   // If the return is not a primitive, a pointer to the storage where the
   // value is initialized in is passed as the first argument. See 'RVO'
