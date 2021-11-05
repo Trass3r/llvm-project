@@ -10,7 +10,10 @@
 #include "Context.h"
 #include "Opcode.h"
 #include "Program.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/TimeProfiler.h"
 #include <type_traits>
 
 using namespace clang;
@@ -25,6 +28,14 @@ ByteCodeEmitter::compileFunc(const FunctionDecl *FuncDecl) {
   if (!FuncDecl->isDefined(FuncDecl) ||
       (!FuncDecl->hasBody() && FuncDecl->willHaveBody()))
     return nullptr;
+
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, [&]() {
+    std::string Name;
+    llvm::raw_string_ostream OS(Name);
+    FuncDecl->getNameForDiagnostic(OS, Ctx.getASTContext().getPrintingPolicy(),
+                                   /*Qualified=*/true);
+    return Name;
+  });
 
   // Set up argument indices.
   unsigned ParamOffset = 0;
