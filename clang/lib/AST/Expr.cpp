@@ -27,13 +27,17 @@
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/CharInfo.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/LiteralSupport.h"
 #include "clang/Lex/Preprocessor.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
+#include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cstring>
@@ -3295,6 +3299,12 @@ bool Expr::hasAnyTypeDependentArguments(ArrayRef<Expr *> Exprs) {
   return false;
 }
 
+static StringRef getSourceTextForExpr(ASTContext &Ctx, const Expr *E) {
+  return Lexer::getSourceText(
+      CharSourceRange::getTokenRange(E->getSourceRange()),
+      Ctx.getSourceManager(), Ctx.getLangOpts());
+}
+
 bool Expr::isConstantInitializer(ASTContext &Ctx, bool IsForRef,
                                  const Expr **Culprit) const {
   assert(!isValueDependent() &&
@@ -3308,6 +3318,7 @@ bool Expr::isConstantInitializer(ASTContext &Ctx, bool IsForRef,
   //
   // If we ever capture reference-binding directly in the AST, we can
   // kill the second parameter.
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, getSourceTextForExpr(Ctx, this));
 
   if (IsForRef) {
     if (auto *EWC = dyn_cast<ExprWithCleanups>(this))
