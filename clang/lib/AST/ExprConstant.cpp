@@ -52,10 +52,13 @@
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/DiagnosticSema.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/TargetInfo.h"
+#include "clang/Lex/Lexer.h"
 #include "llvm/ADT/APFixedPoint.h"
 #include "llvm/ADT/SmallBitVector.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/SipHash.h"
@@ -73,6 +76,12 @@ using llvm::APInt;
 using llvm::APSInt;
 using llvm::APFloat;
 using llvm::FixedPointSemantics;
+
+static StringRef getSourceTextForExpr(const ASTContext &Ctx, const Expr *E) {
+  return Lexer::getSourceText(
+      CharSourceRange::getTokenRange(E->getSourceRange()),
+      Ctx.getSourceManager(), Ctx.getLangOpts());
+}
 
 namespace {
   struct LValue;
@@ -6378,6 +6387,11 @@ static bool HandleFunctionCall(SourceLocation CallLoc,
   if (!Info.CheckCallLimit(CallLoc))
     return false;
 
+  llvm::TimeTraceScope scope(__func__, [&]() {
+    return Callee->getNameAsString() + '@' +
+           CallLoc.printToString(Info.Ctx.getSourceManager());
+  });
+
   CallStackFrame Frame(Info, E->getSourceRange(), Callee, This, E, Call);
 
   // For a trivial copy or move assignment, perform an APValue copy. This is
@@ -6643,6 +6657,7 @@ static bool HandleConstructorCall(const Expr *E, const LValue &This,
                                   ArrayRef<const Expr*> Args,
                                   const CXXConstructorDecl *Definition,
                                   EvalInfo &Info, APValue &Result) {
+  llvm::TimeTraceScope scope(__func__, getSourceTextForExpr(Info.Ctx, E));
   CallScopeRAII CallScope(Info);
   CallRef Call = Info.CurrentCall->createCall(Definition);
   if (!EvaluateArgs(Args, Call, Info, Definition))
@@ -15843,6 +15858,7 @@ static bool Evaluate(APValue &Result, EvalInfo &Info, const Expr *E) {
   // In C, function designators are not lvalues, but we evaluate them as if they
   // are.
   QualType T = E->getType();
+  //llvm::TimeTraceScope scope(Info.InConstantContext ? "constexpr evaluation" : "non-const evaluation", [&](){ return T.getAsString(); });
   if (E->isGLValue() || T->isFunctionType()) {
     LValue LV;
     if (!EvaluateLValue(E, LV, Info))
@@ -16889,6 +16905,8 @@ static bool EvaluateCPlusPlus11IntegralConstantExpr(const ASTContext &Ctx,
     return false;
   }
 
+  llvm::TimeTraceScope scope(__func__, getSourceTextForExpr(Ctx, E));
+
   APValue Result;
   if (!E->isCXX11ConstantExpr(Ctx, &Result, Loc))
     return false;
@@ -16922,6 +16940,7 @@ bool Expr::isIntegerConstantExpr(const ASTContext &Ctx,
 
 std::optional<llvm::APSInt>
 Expr::getIntegerConstantExpr(const ASTContext &Ctx, SourceLocation *Loc) const {
+  llvm::TimeTraceScope scope(__func__);
   if (isValueDependent()) {
     // Expression evaluator can't succeed on a dependent expression.
     return std::nullopt;

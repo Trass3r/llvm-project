@@ -12,10 +12,13 @@
 #include "IntegralAP.h"
 #include "Opcode.h"
 #include "Program.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/ASTLambda.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/Basic/Builtins.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm/Support/TimeProfiler.h"
 #include <type_traits>
 
 using namespace clang;
@@ -38,6 +41,14 @@ Function *ByteCodeEmitter::compileFunc(const FunctionDecl *FuncDecl) {
   // parameters yet.
   if (!FuncDecl->param_empty() && !FuncDecl->param_begin())
     return nullptr;
+
+  llvm::TimeTraceScope scope(LLVM_PRETTY_FUNCTION, [&]() {
+    std::string Name;
+    llvm::raw_string_ostream OS(Name);
+    FuncDecl->getNameForDiagnostic(OS, Ctx.getASTContext().getPrintingPolicy(),
+                                   /*Qualified=*/true);
+    return Name;
+  });
 
   bool IsLambdaStaticInvoker = false;
   if (const auto *MD = dyn_cast<CXXMethodDecl>(FuncDecl);
@@ -72,6 +83,7 @@ Function *ByteCodeEmitter::compileFunc(const FunctionDecl *FuncDecl) {
   SmallVector<PrimType, 8> ParamTypes;
   SmallVector<unsigned, 8> ParamOffsets;
   llvm::DenseMap<unsigned, Function::ParamDescriptor> ParamDescriptors;
+
 
   // If the return is not a primitive, a pointer to the storage where the
   // value is initialized in is passed as the first argument. See 'RVO'
