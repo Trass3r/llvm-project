@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ubuntu:rolling # ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON fails to build
+        # -gsplit-dwarf in CXXFLAGS with ThinLTO adds a .dwo link to the .o file but never creates it, and a strange nametable=GNU instead of none
+        # -gsplit-dwarf does not work with ThinLTO cache either
+        # -fuse-ld=lld is necessary to pass CMake compiler check
+        # gcc LTO requires too much space. cmake_args: -DLLVM_ENABLE_LTO=On -DLLVM_ENABLE_LLD=OFF
+        include:
+          #- {os: ubuntu-latest, cc: gcc, cxx: g++, config: Debug, cmake_args: -DCMAKE_CXX_FLAGS_DEBUG="", cflags: -march=skylake -Og -g1}
+          #- {os: ubuntu-latest, cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_CXX_FLAGS_DEBUG="", cflags: -march=skylake -Og -g1}
+          - {os: ubuntu-latest, cc: gcc, cxx: g++, config: Release, cflags: -march=skylake -Wsuggest-final-types}
+          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin, cflags: -march=skylake, ldflags: -fuse-ld=lld -Xlinker --thinlto-cache-policy=cache_size_bytes=2G}
+          #- {os: ubuntu-18.04,  cc: gcc, cxx: g++, config: Release, cflags: -march=skylake, cmake_args: -DLLVM_ENABLE_ASSERTIONS=OFF}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: Trass3r/setup-cpp@master
+    - run: |
+        #sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        apt update && apt upgrade -y && apt install -y sudo zstd
+        sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache
+    - uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        max-size: 2G
+        verbose: 1
+    - run: echo "TIMESTAMP=`date -u +'%Y%m%d-%H%M%S'`" >> $GITHUB_ENV
+    - name: restore thinlto cache
+      uses: Trass3r/cache-action@main
+      with:
+        path: build/lto.cache
+        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ env.TIMESTAMP }}
+        restore-keys: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-
+    - name: build
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+        CXXFLAGS: ${{ matrix.cflags }}
+        LDFLAGS: ${{ matrix.cflags }} ${{ matrix.ldflags }} -static-libgcc -static-libstdc++
+        CMAKE_C_COMPILER_LAUNCHER: ccache
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        CCACHE_BASEDIR: ${{ github.workspace }}
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_DEBUG: 1
+        #CCACHE_LOGFILE: /tmp/ccache.log
+      run: |
+        mkdir -p build && cd build
+        # -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON does not work with -DBUILD_SHARED_LIBS=ON
+        cmake -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DLLVM_ENABLE_ASSERTIONS=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+              -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+              -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_LLD=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF ${{ matrix.cmake_args }} ../llvm/
+        ninja -k4 install-clangd install-clang
+        ninja clean || true # save space
+        #sudo bash -c 'find ../install -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
+        # count exported symbols
+        find ../install/lib -name '*.so' -exec sh -c 'echo {} `nm -D {} | fgrep " T " | wc -l`' \; || true
+    - name: process ccache logs
+      run: |
+        cd build
+        find -name '*.ccache-log' | xargs egrep '[^W]miss|supported|found'
+        cat ./tools/clang/lib/StaticAnalyzer/Frontend/CMakeFiles/obj.clangStaticAnalyzerFrontend.dir/FrontendActions.cpp.o.ccache-log
+    - name: separate debug info
+      if: ${{ !contains(matrix.cmake_args, 'gsplit-dwarf') }}
+      run: |
+        find install/ -type f \( -executable -o -name \*.so\* \) \
+          -exec objcopy --only-keep-debug {} {}.dbg \; \
+          -exec strip --strip-debug --strip-unneeded {} \; \
+          -exec objcopy --add-gnu-debuglink={}.dbg {} \; \
+          -exec chmod -x {}.dbg \; \
+        || true
+    - name: create tarball
+      run: cd install && tar cvapf "$GITHUB_WORKSPACE/clang.tar.xz" *
+    - uses: actions/upload-artifact@v3
+      with:
+        name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: clang.tar.xz
+
+  winbuild:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-latest, cc: cl, cxx: cl, config: Release, cflags: -D_HAS_EXCEPTIONS=0 -GR- -GS- -Gw, ldflags: "-OPT:REF -OPT:ICF", cmake_args: -DBUILD_SHARED_LIBS=OFF}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: Trass3r/setup-cpp@master
+    - uses: hendrikmuhs/ccache-action@main
+      with:
+        key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        max-size: 1G
+        variant: sccache
+        verbose: 1
+    - uses: ilammy/msvc-dev-cmd@v1
+    - shell: bash
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+        CXXFLAGS: ${{ matrix.cflags }}
+        LDFLAGS: ${{ matrix.ldflags }}
+        CMAKE_C_COMPILER_LAUNCHER: sccache
+        CMAKE_CXX_COMPILER_LAUNCHER: sccache
+        CCACHE_NOCOMPRESS: 1
+      run: |
+        mkdir build && cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+          -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+          -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
+        ninja -k4 install-clangd install-clang
+    - name: create package
+      shell: bash
+      run: cd install && 7z a "$GITHUB_WORKSPACE/clang.7z" *
+    - uses: actions/upload-artifact@v3
+      with:
+        name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: clang.7z
