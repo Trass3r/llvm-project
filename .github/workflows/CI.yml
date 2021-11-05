@@ -1,0 +1,226 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: main
+    paths-ignore:
+      - '**/codeql.yml'
+  pull_request:
+    branches: main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    #container: ubuntu:rolling
+    strategy:
+      fail-fast: false
+      matrix:
+        # -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON fails to build
+        # -gsplit-dwarf in CXXFLAGS with ThinLTO adds a .dwo link to the .o file but never creates it, and a strange nametable=GNU instead of none
+        # -gsplit-dwarf does not work with ThinLTO cache either
+        # -fuse-ld=lld is necessary to pass CMake compiler check
+        # gcc LTO requires too much space. ldflags: -flto=auto
+        # -Wsuggest-final-types really needs LTO
+        include:
+          - {os: ubuntu-latest, cc: gcc, cxx: g++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Off -DLLVM_ENABLE_LLD=OFF, cflags: -march=skylake}
+          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake, ldflags: -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --icf=safe}
+    steps:
+    #- run: apt update && apt install -y sudo git wget curl zstd
+    - name: free up ~20GB on the runner
+      run: |
+        set -ux
+        df -h
+        time sudo apt autoremove -qq firefox* snap* powershell* gcc-12 gfortran*
+        time sudo apt autoremove -qq php* ruby*
+        time sudo apt autoremove -qq temurin* *-jre* '*llvm*' moby*
+        #time sudo apt autoremove -qq dotnet* microsoft* *sql* mono*
+        time sudo apt autoremove -qq azure* # google*
+        dpkg-query -Wf '${db:Status-Status} ${Installed-Size}\t${Package}\n' | sed -ne 's/^installed //p' | sort -n
+        df -h
+        time sudo rm -rf /usr/local/lib/android
+        time docker system prune -a -f --volumes
+        df -h
+    - name: Install prerequisites
+      run: |
+        set -eux
+        #sudo sed -i s/noble/oracular/ /etc/apt/sources.list
+        sudo apt update
+        #sudo apt install -y lsb-release wget software-properties-common gnupg
+        #sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 18
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache
+        sudo apt install -y libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
+        df -h
+        sudo apt clean
+        df -h
+    - uses: actions/checkout@v4
+      with:
+        show-progress: false
+    - uses: Trass3r/setup-cpp@master
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        max-size: 5G
+        verbose: 2
+    - run: echo "TIMESTAMP=`date -u +'%Y%m%d-%H%M%S'`" >> $GITHUB_ENV
+      if: ${{ contains(matrix.cxx, 'clang') }}
+    - name: restore thinlto cache
+      if: ${{ contains(matrix.cxx, 'clang') }}
+      uses: Trass3r/cache-action@main
+      with:
+        path: build/lto.cache
+        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ env.TIMESTAMP }}
+        restore-keys: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-
+    - name: build
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+        CXXFLAGS: ${{ matrix.cflags }}
+        LDFLAGS: ${{ matrix.cflags }} ${{ matrix.ldflags }} -static-libgcc -static-libstdc++
+        CMAKE_C_COMPILER_LAUNCHER: ccache
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        CCACHE_BASEDIR: ${{ github.workspace }}
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_MAXFILES: 8000
+        CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_ctime,include_file_mtime
+        CCACHE_COMPILERCHECK: '%compiler% -dumpversion'
+        CCACHE_DEBUG: 1
+        CCACHE_LOGFILE: ccache.log
+      run: |
+        mkdir -p build && cd build
+        # -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON does not work with -DBUILD_SHARED_LIBS=ON
+        cmake -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DLLVM_ENABLE_ASSERTIONS=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+              -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=ON -DCLANG_INCLUDE_TESTS=ON -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+              -DCLANGD_ENABLE_REMOTE=OFF \
+              -DLLVM_ENABLE_ZLIB=OFF \
+              -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
+              -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
+        ninja $(ninja -t targets all | grep -F cmake_pch | sed 's/:.*//') # build PCH targets
+        ninja -k0 llvm-tblgen clang-tblgen
+        ninja install-clangd
+        #ninja ClangdTests FileCheck
+        df -h
+        #sudo bash -c 'find ../install -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
+        # count exported symbols
+        find ../install/lib -name '*.so' -exec sh -c 'echo {} `nm -D {} | fgrep " T " | wc -l`' \; || true
+    - name: tests
+      if: false
+      run: |
+        cd build
+        ninja check-clangd
+        #ninja check-clang-tools
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+        ccache -x
+        ninja clean || true # save space
+    - name: analyze ccache logs
+      run: |
+        cd build
+        find -name '*.ccache-log' | xargs grep -Ei '_miss| supported|found|too ' || true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: |
+          build/ccache.log
+          build/**/*.ccache-log
+          build/**/*.ccache-input-text
+    - name: separate debug info
+      if: ${{ !contains(matrix.cmake_args, 'gsplit-dwarf') }}
+      run: |
+        find install/ -type f \( -executable -o -name \*.so\* \) \
+          -exec objcopy --only-keep-debug {} {}.dbg \; \
+          -exec strip --strip-debug --strip-unneeded {} \; \
+          -exec objcopy --add-gnu-debuglink={}.dbg {} \; \
+          -exec chmod -x {}.dbg \; -print \
+        || true
+    - name: create tarball
+      run: cd install && tar cvapf "$GITHUB_WORKSPACE/clang.tar.xz" *
+    - uses: actions/upload-artifact@v4
+      with:
+        name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: clang.tar.xz
+
+  winbuild:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-latest, cc: cl, cxx: cl, config: Release, cflags: -D_HAS_EXCEPTIONS=0 -GR- -GS- -Gw, ldflags: "-OPT:REF -OPT:ICF", cmake_args: -DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_LTO=Off}
+          - {os: windows-latest, cc: clang-cl, cxx: clang-cl, config: Release, cflags: -D_HAS_EXCEPTIONS=0 -GR- -GS- -Gw, ldflags: "-OPT:REF -OPT:ICF", cmake_args: -DBUILD_SHARED_LIBS=OFF -DLLVM_ENABLE_LTO=Thin}
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        show-progress: false
+    - uses: Trass3r/setup-cpp@master
+    - run: |
+        choco upgrade -y --limit-output --no-progress ccache
+        ${{ contains(matrix.cxx, 'clang') }} && choco upgrade -y --limit-output --no-progress llvm
+        exit 0
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        max-size: 5G
+        variant: ccache
+        verbose: 2
+    - run: echo "TIMESTAMP=`date -u +'%Y%m%d-%H%M%S'`" >> $GITHUB_ENV
+    - name: restore LTO cache
+      uses: Trass3r/cache-action@main
+      with:
+        path: ${{ contains(matrix.cxx, 'clang') && 'build/lto.cache' || 'build/**/*.iobj' }}
+        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ env.TIMESTAMP }}
+        restore-keys: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-
+    - uses: ilammy/msvc-dev-cmd@v1
+    - shell: cmd
+      run: |
+        dir /W C:
+        dir /W D:
+    - env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+        CXXFLAGS: ${{ matrix.cflags }}
+        LDFLAGS: ${{ matrix.ldflags }}
+        CCACHE_NOCOMPRESS: 1
+        CCACHE_MAXFILES: 8000
+        CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_ctime,include_file_mtime
+        CCACHE_COMPILERCHECK: "%compiler% ${{ contains(matrix.cxx, 'clang') && '-clang:-dumpversion' || '' }}"
+        CCACHE_DEPEND: 1
+        CCACHE_LOGFILE: ccache.log
+        CCACHE_DEBUG: 1
+      run: |
+        set -eux
+        mkdir -p build && cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+          -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+          -DLLVM_USE_SYMLINKS=ON \
+          -DLLVM_CCACHE_BUILD=ON \
+          -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
+        ninja $(ninja -t targets all | grep -F cmake_pch | sed 's/:.*//') # build PCH targets
+        ninja -k0 llvm-tblgen clang-tblgen
+        ninja install-clangd # install-clang install-clang-resource-headers
+        find -type f -name '*.obj' -exec du -ch {} + | grep total$
+        ccache -x
+    - shell: cmd
+      run: |
+        dir /W C:
+        dir /W D:
+    - name: analyze ccache logs
+      run: |
+        cd build
+        find -name '*.ccache-log' | xargs grep -Ei '_miss| supported|found|too ' || true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: |
+          build/ccache.log
+          build/**/*.ccache-log
+          build/**/*.ccache-input-text
+    - name: create package
+      run: cd install && 7z a -snl "$GITHUB_WORKSPACE/clang.7z" *
+    - uses: actions/upload-artifact@v4
+      with:
+        name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: clang.7z
