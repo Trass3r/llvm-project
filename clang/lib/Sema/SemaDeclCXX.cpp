@@ -2390,7 +2390,7 @@ static bool CheckConstexprFunctionBody(Sema &SemaRef, const FunctionDecl *Dcl,
   // function", so is not checked in CheckValid mode.
   SmallVector<PartialDiagnosticAt, 8> Diags;
   if (Kind == Sema::CheckConstexprKind::Diagnose &&
-      !Expr::isPotentialConstantExpr(Dcl, Diags)) {
+      !Expr::isPotentialConstantExpr(SemaRef.getASTContext(), Dcl, Diags)) {
     SemaRef.Diag(Dcl->getLocation(),
                  diag::ext_constexpr_function_never_constant_expr)
         << isa<CXXConstructorDecl>(Dcl) << Dcl->isConsteval();

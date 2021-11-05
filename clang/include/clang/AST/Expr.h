@@ -560,7 +560,7 @@ public:
   /// might be usable in a constant expression in C++11, if it were marked
   /// constexpr. Return false if the function can never produce a constant
   /// expression, along with diagnostics describing why not.
-  static bool isPotentialConstantExpr(const FunctionDecl *FD,
+  static bool isPotentialConstantExpr(const ASTContext &Ctx, const FunctionDecl *FD,
                                       SmallVectorImpl<
                                         PartialDiagnosticAt> &Diags);
 
