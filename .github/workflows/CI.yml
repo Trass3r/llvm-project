@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
@@ -33,6 +37,10 @@ jobs:
       with:
         path: build/.ccache
         key: ${{ matrix.config.cc }}-${{ matrix.config.config }}-ccache
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: 'cpp'
     - name: build
       env:
         CC: ${{ matrix.config.cc }}
@@ -62,3 +70,5 @@ jobs:
       with:
         name: clang
         path: /opt/clang
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
