@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +20,7 @@ jobs:
         - {cc: clang, cxx: clang++, config: Release, cmake_args: -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_LTO=Thin -DCMAKE_CXX_FLAGS="-march=skylake -gsplit-dwarf -g1 -ftime-trace" -DLLVM_ENABLE_MODULES=ON -DLLVM_ENABLE_MODULE_DEBUGGING=ON }
 
     steps:
-    - run: echo "::set-env name=CCACHE_DIR::$GITHUB_WORKSPACE/build/.ccache"
+    - run: echo "CCACHE_DIR=$GITHUB_WORKSPACE/build/.ccache" >> $GITHUB_ENV
     - uses: actions/checkout@v2
     - uses: Trass3r/setup-cpp@master
     - run: sudo apt install -y build-essential g++-10 binutils-dev cmake ninja-build clang lld python3 ccache libedit-dev
