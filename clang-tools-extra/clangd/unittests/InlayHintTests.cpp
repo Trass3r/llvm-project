@@ -1361,6 +1361,16 @@ TEST(TypeHints, Aliased) {
   EXPECT_THAT(hintsOfKind(AST, InlayHintKind::Type), IsEmpty());
 }
 
+TEST(TypeHints, Padding) {
+  assertTypeHints(R"cpp(
+    struct Foo {
+      bool b$b[[;]]
+      int i;
+    };
+  )cpp",
+                  ExpectedHint{" (+3 padding)", "b"});
+}
+
 TEST(DesignatorHints, Basic) {
   assertDesignatorHints(R"cpp(
     struct S { int x, y, z; };
