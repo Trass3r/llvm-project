@@ -17,6 +17,7 @@
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/RecordLayout.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/StmtVisitor.h"
@@ -379,7 +380,7 @@ struct Callee {
   FunctionProtoTypeLoc Loc;
 };
 
-class InlayHintVisitor : public RecursiveASTVisitor<InlayHintVisitor> {
+class InlayHintVisitor final : public RecursiveASTVisitor<InlayHintVisitor> {
 public:
   InlayHintVisitor(std::vector<InlayHint> &Results, ParsedAST &AST,
                    const Config &Cfg, std::optional<Range> RestrictRange)
@@ -399,6 +400,48 @@ public:
 
     // Not setting PrintCanonicalTypes for "auto" allows
     // SuppressDefaultTemplateArgs (set by default) to have an effect.
+  }
+
+  bool VisitFieldDecl(FieldDecl *FD) {
+    if (!Cfg.InlayHints.DeducedTypes)
+      return true;
+    const auto *Record = FD->getParent();
+    if (Record)
+      Record = Record->getDefinition();
+    if (Record && !Record->isInvalidDecl() && !Record->isDependentType() &&
+        !FD->isBitField()) {
+      const auto &Ctx = FD->getASTContext();
+      const ASTRecordLayout &Layout = Ctx.getASTRecordLayout(Record);
+      auto FOffset = Layout.getFieldOffset(FD->getFieldIndex()) / 8;
+      // Offset in a union is always zero, so not really useful to report.
+      if (Record->isUnion())
+        FOffset = 0; // TODO: .reset();
+      if (auto Size = Ctx.getTypeSizeInCharsIfKnown(FD->getType())) {
+        auto FSize = FD->isZeroSize(Ctx) ? 0 : Size->getQuantity();
+        unsigned EndOfField = FOffset + FSize;
+
+        uint32_t Padding = 0;
+        // Calculate padding following the field.
+        if (!Record->isUnion() &&
+            FD->getFieldIndex() + 1 < Layout.getFieldCount()) {
+          // Measure padding up to the next class field.
+          unsigned NextOffset =
+              Layout.getFieldOffset(FD->getFieldIndex() + 1) / 8;
+          if (NextOffset >= EndOfField) // next field could be a bitfield!
+            Padding = NextOffset - EndOfField;
+        } else {
+          // Measure padding up to the end of the object.
+          Padding = Layout.getSize().getQuantity() - EndOfField;
+        }
+        if (Padding)
+          addInlayHint(FD->getSourceRange().getEnd().getLocWithOffset(1),
+                       HintSide::Right, InlayHintKind::Type,
+                       /*Prefix=*/" ",
+                       llvm::formatv("(+{0} padding)", Padding).str(),
+                       /*Suffix=*/"");
+      }
+    }
+    return true;
   }
 
   bool VisitTypeLoc(TypeLoc TL) {
