@@ -1531,6 +1531,16 @@ TEST(TypeHints, Decltype) {
                   ExpectedHint{": int", "h"}, ExpectedHint{": int", "i"});
 }
 
+TEST(TypeHints, Padding) {
+  assertTypeHints(R"cpp(
+    struct Foo {
+      bool b$b[[;]]
+      int i;
+    };
+  )cpp",
+                  ExpectedHint{" (+3 padding)", "b"});
+}
+
 TEST(TypeHints, SubstTemplateParameterAliases) {
   llvm::StringRef Header = R"cpp(
   template <class T> struct allocator {};
