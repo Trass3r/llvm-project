@@ -119,9 +119,12 @@ void visitDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
     if (!CXXRD->isEffectivelyFinal()) {
       Sub.locations = lookupIndex(Index, Limit, Path, D, RelationKind::BaseOf);
     }
-    for (const auto *P : typeParents(CXXRD)) {
-      if (auto Loc = declToLocation(P->getCanonicalDecl()))
-        Super.locations.emplace_back(*Loc);
+    // bases codelens is only useful on forward decls
+    if (!CXXRD->isThisDeclarationADefinition()) {
+      for (const auto *P : typeParents(CXXRD)) {
+        if (auto Loc = declToLocation(P->getCanonicalDecl()))
+          Super.locations.emplace_back(*Loc);
+      }
     }
   } else if (auto *CXXMD = dyn_cast<CXXMethodDecl>(D)) {
     if (CXXMD->isVirtual()) {
@@ -139,7 +142,7 @@ void visitDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
     Super.uri = std::string(Path);
     Command Cmd;
     Cmd.command = std::string(CodeAction::SHOW_REFERENCES);
-    Cmd.title = std::to_string(Count) + " base";
+    Cmd.title = std::to_string(Count) + " base(s)";
     Cmd.argument = std::move(Super);
     Results.emplace_back(CodeLens{Range, std::move(Cmd), std::nullopt});
   }
