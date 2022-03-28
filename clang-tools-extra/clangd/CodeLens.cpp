@@ -82,12 +82,14 @@ void traverseDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
   if (auto *CXXRD = dyn_cast<CXXRecordDecl>(D)) {
     if (!CXXRD->isEffectivelyFinal()) {
       Sub.locations =
-
           lookupIndex(Index, Limit, Path, D, RelationKind::BaseOf);
     }
-    for (const auto *P : typeParents(CXXRD)) {
-      if (auto Loc = declToLocation(P->getCanonicalDecl()))
-        Super.locations.emplace_back(*Loc);
+    // bases codelens is only useful on forward decls
+    if (!CXXRD->isThisDeclarationADefinition()) {
+      for (const auto *P : typeParents(CXXRD)) {
+        if (auto Loc = declToLocation(P->getCanonicalDecl()))
+          Super.locations.emplace_back(*Loc);
+      }
     }
   } else if (auto *CXXMD = dyn_cast<CXXMethodDecl>(D)) {
     if (CXXMD->isVirtual()) {
@@ -105,7 +107,7 @@ void traverseDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
     Super.uri = std::string(Path);
     Command Cmd;
     Cmd.command = std::string(CodeAction::SHOW_REFERENCES);
-    Cmd.title = std::to_string(Count) + " base";
+    Cmd.title = std::to_string(Count) + " base(s)";
     Cmd.argument = std::move(Super);
     Results.emplace_back(CodeLens{Range, std::move(Cmd), None});
   }
@@ -157,7 +159,7 @@ llvm::Expected<CodeLens> resolveCodeLens(ParsedAST &AST, const CodeLens &Params,
     for (auto &Ref : Refs) {
       Arg.locations.emplace_back(std::move(Ref.Loc));
     }
-    Cmd.title = std::to_string(Refs.size()) + " references";
+    Cmd.title = std::to_string(Refs.size()) + " ref(s)";
     Cmd.argument = std::move(Arg);
     return CodeLens{Params.range, std::move(Cmd), None};
   }
