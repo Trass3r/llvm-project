@@ -164,6 +164,9 @@ public:
     // Whether the client supports folding only complete lines.
     bool LineFoldingOnly = false;
 
+    /// Enable preview of CodeLens feature.
+    bool CodeLens = false;
+
     FeatureModuleSet *FeatureModules = nullptr;
     /// If true, use the dirty buffer contents when building Preambles.
     bool UseDirtyHeaders = false;
@@ -363,6 +366,12 @@ public:
   /// Describe the AST subtree for a piece of code.
   void getAST(PathRef File, llvm::Optional<Range> R,
               Callback<llvm::Optional<ASTNode>> CB);
+
+  /// CodeLenses.
+  void provideCodeLens(PathRef File, uint32_t Limit,
+                       Callback<std::vector<CodeLens>> CB);
+  void resolveCodeLens(const CodeLens &Params, uint32_t Limit,
+                       Callback<CodeLens> CB);
 
   /// Runs an arbitrary action that has access to the AST of the specified file.
   /// The action will execute on one of ClangdServer's internal threads.
