@@ -1309,8 +1309,9 @@ TEST(TypeHints, LongTypeName) {
     struct MultipleWords {};
     A<MultipleWords, MultipleWords, MultipleWords> foo();
     // Omit type hint past a certain length (currently 32)
-    auto var = foo();
-  )cpp");
+    auto $var[[var]] = foo();
+  )cpp",
+                  ExpectedHint{": A<MultipleWords, MultipleWords..", "var"});
 }
 
 TEST(TypeHints, DefaultTemplateArgs) {

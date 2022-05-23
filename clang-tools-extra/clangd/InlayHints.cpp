@@ -709,8 +709,12 @@ private:
       return;
 
     std::string TypeName = T.getAsString(Policy);
-    if (TypeName.length() < TypeNameLimit)
-      addInlayHint(R, HintSide::Right, InlayHintKind::Type, Prefix, TypeName,
+    if (TypeName.length() >= TypeNameLimit) {
+      TypeName.resize(TypeNameLimit);
+      TypeName[TypeNameLimit-2] = '.';
+      TypeName[TypeNameLimit-1] = '.';
+    }
+    addInlayHint(R, HintSide::Right, InlayHintKind::Type, Prefix, TypeName,
                    /*Suffix=*/"");
   }
 
