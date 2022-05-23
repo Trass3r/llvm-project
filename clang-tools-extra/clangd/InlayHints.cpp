@@ -1054,7 +1054,12 @@ private:
       // type.
       TypeName = T.getAsString(TypeHintPolicy);
     }
-    if (shouldPrintTypeHint(TypeName))
+    if (Cfg.InlayHints.TypeNameLimit && TypeName.length() >= Cfg.InlayHints.TypeNameLimit) {
+      TypeName.resize(Cfg.InlayHints.TypeNameLimit);
+      TypeName[Cfg.InlayHints.TypeNameLimit-2] = '.';
+      TypeName[Cfg.InlayHints.TypeNameLimit-1] = '.';
+    }
+    //if (shouldPrintTypeHint(TypeName))
       addInlayHint(R, HintSide::Right, InlayHintKind::Type, Prefix, TypeName,
                    /*Suffix=*/"");
   }
