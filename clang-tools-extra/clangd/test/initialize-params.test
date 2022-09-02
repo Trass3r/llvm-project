@@ -9,6 +9,9 @@
 # CHECK-NEXT:      "callHierarchyProvider": true,
 # CHECK-NEXT:      "clangdInlayHintsProvider": true,
 # CHECK-NEXT:      "codeActionProvider": true,
+# CHECK-NEXT:      "codeLensProvider": {
+# CHECK-NEXT:        "resolveProvider": true
+# CHECK-NEXT:      },
 # CHECK-NEXT:      "compilationDatabase": {
 # CHECK-NEXT:        "automaticReload": true
 # CHECK-NEXT:      },
