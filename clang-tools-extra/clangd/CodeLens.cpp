@@ -152,7 +152,7 @@ llvm::Expected<CodeLens> resolveCodeLens(ParsedAST &AST, const CodeLens &Params,
     for (auto &Ref : Refs) {
       Arg.locations.emplace_back(std::move(Ref.Loc));
     }
-    Cmd.title = std::to_string(Refs.size()) + " ref(s)";
+    Cmd.title = std::to_string(Refs.size() - 1) + " ref(s)";
     Cmd.argument = std::move(Arg);
     return CodeLens{Params.range, std::move(Cmd), None};
   }
