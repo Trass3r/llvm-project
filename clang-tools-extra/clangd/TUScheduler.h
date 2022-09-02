@@ -62,7 +62,7 @@ enum class WantDiagnostics {
 struct ASTRetentionPolicy {
   /// Maximum number of ASTs to be retained in memory when there are no pending
   /// requests for them.
-  unsigned MaxRetainedASTs = 32;
+  unsigned MaxRetainedASTs = 3;
 };
 
 /// Clangd may wait after an update to see if another one comes along.
