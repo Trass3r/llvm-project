@@ -405,7 +405,7 @@ ClangdServer::createConfiguredContextProvider(const config::Provider *Provider,
 
 void ClangdServer::removeDocument(PathRef File) {
   DraftMgr.removeDraft(File);
-  // WorkScheduler->remove(File);
+  WorkScheduler->remove(File);
 }
 
 void ClangdServer::codeComplete(PathRef File, Position Pos,
