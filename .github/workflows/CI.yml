@@ -22,7 +22,7 @@ jobs:
           #- {os: ubuntu-latest, cc: gcc, cxx: g++, config: Debug, cmake_args: -DCMAKE_CXX_FLAGS_DEBUG="", cflags: -march=skylake -Og -g1}
           #- {os: ubuntu-latest, cc: clang, cxx: clang++, config: Debug, cmake_args: -DCMAKE_CXX_FLAGS_DEBUG="", cflags: -march=skylake -Og -g1}
           - {os: ubuntu-latest, cc: gcc, cxx: g++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Off -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake -Wsuggest-final-types, ldflags: -fuse-ld=lld -Xlinker --icf=all}
-          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin, cflags: -march=skylake, ldflags: -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --icf=safe}
+          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin, cflags: -march=skylake, ldflags: -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --icf=safe -Xlinker --print-icf-sections}
           #- {os: ubuntu-18.04,  cc: gcc, cxx: g++, config: Release, cflags: -march=skylake, cmake_args: -DLLVM_ENABLE_ASSERTIONS=OFF}
     steps:
     - uses: actions/checkout@v3
