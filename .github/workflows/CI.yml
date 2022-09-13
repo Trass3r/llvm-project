@@ -71,6 +71,10 @@ jobs:
     - name: tests
       run: |
         cd build
+        ninja check-clang-tools
+    - name: tests
+      run: |
+        cd build
         ninja check-clangd
         ninja clean || true # save space
         #sudo bash -c 'find ../install -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
