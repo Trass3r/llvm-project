@@ -69,6 +69,7 @@ jobs:
         ninja -k4 install-clangd install-clang
         ninja ClangdTests FileCheck
     - name: tests
+      if: false
       run: |
         cd build
         ninja check-clang-tools
