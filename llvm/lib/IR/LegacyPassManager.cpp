@@ -12,6 +12,7 @@
 
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/ADT/MapVector.h"
+#include "llvm/Demangle/Demangle.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LLVMContext.h"
@@ -1408,7 +1409,9 @@ bool FPPassManager::runOnFunction(Function &F) {
     FunctionSize = F.getInstructionCount();
   }
 
-  llvm::TimeTraceScope FunctionScope("OptFunction", F.getName());
+  llvm::TimeTraceScope FunctionScope("OptFunction", [&]() {
+    return demangle(F.getName().str());
+  });
 
   for (unsigned Index = 0; Index < getNumContainedPasses(); ++Index) {
     FunctionPass *FP = getContainedPass(Index);
