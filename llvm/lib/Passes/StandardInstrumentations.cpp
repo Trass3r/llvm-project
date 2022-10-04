@@ -20,6 +20,7 @@
 #include "llvm/Analysis/LazyCallGraph.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/Demangle/Demangle.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
@@ -216,11 +217,11 @@ void printIR(raw_ostream &OS, const Loop *L) {
 }
 
 std::string getIRName(Any IR) {
-  if (unwrapIR<Module>(IR))
-    return "[module]";
+  if (const auto *M = unwrapIR<Module>(IR))
+    return M->getModuleIdentifier();
 
   if (const auto *F = unwrapIR<Function>(IR))
-    return F->getName().str();
+    return demangle(F->getName().str());
 
   if (const auto *C = unwrapIR<LazyCallGraph::SCC>(IR))
     return C->getName();
