@@ -36,11 +36,11 @@ namespace {
 /// After:
 ///   int i;
 ///   ^^^
-class ExpandDeducedType : public Tweak {
+class ExpandDeducedType final : public Tweak {
 public:
   const char *id() const final;
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
   bool prepare(const Selection &Inputs) override;
   Expected<Effect> apply(const Selection &Inputs) override;

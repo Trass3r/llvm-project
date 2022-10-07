@@ -27,7 +27,7 @@ namespace {
 /// After:
 ///   printf(R"("a"
 /// b)");
-class RawStringLiteral : public Tweak {
+class RawStringLiteral final : public Tweak {
 public:
   const char *id() const final;
 
@@ -35,7 +35,7 @@ public:
   Expected<Effect> apply(const Selection &Inputs) override;
   std::string title() const override { return "Convert to raw string"; }
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
 
 private:
