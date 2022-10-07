@@ -28,7 +28,7 @@ namespace {
 ///   ^^^^^^^                 ^^^^
 /// After:
 ///   if (foo) { continue; } else { return 10; }
-class SwapIfBranches : public Tweak {
+class SwapIfBranches final : public Tweak {
 public:
   const char *id() const final;
 
@@ -36,7 +36,7 @@ public:
   Expected<Effect> apply(const Selection &Inputs) override;
   std::string title() const override { return "Swap if branches"; }
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
   bool hidden() const override { return true; }
 

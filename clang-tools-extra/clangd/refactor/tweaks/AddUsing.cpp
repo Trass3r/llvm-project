@@ -45,7 +45,7 @@ namespace {
 // Currently this only removes qualifier from under the cursor. In the future,
 // we should improve this to remove qualifier from all occurrences of this
 // symbol.
-class AddUsing : public Tweak {
+class AddUsing final : public Tweak {
 public:
   const char *id() const override;
 
@@ -53,7 +53,7 @@ public:
   Expected<Effect> apply(const Selection &Inputs) override;
   std::string title() const override;
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
 
 private:

@@ -30,7 +30,7 @@ namespace {
 /// Currently limited to using namespace directives inside global namespace to
 /// simplify implementation. Also the namespace must not contain using
 /// directives.
-class RemoveUsingNamespace : public Tweak {
+class RemoveUsingNamespace final : public Tweak {
 public:
   const char *id() const override;
 
@@ -40,7 +40,7 @@ public:
     return "Remove using namespace, re-qualify names instead";
   }
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
 
 private:

@@ -802,14 +802,14 @@ llvm::Expected<NewFunction> getExtractedFunction(ExtractionZone &ExtZone,
   return ExtractedFunc;
 }
 
-class ExtractFunction : public Tweak {
+class ExtractFunction final : public Tweak {
 public:
   const char *id() const final;
   bool prepare(const Selection &Inputs) override;
   Expected<Effect> apply(const Selection &Inputs) override;
   std::string title() const override { return "Extract to function"; }
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_EXTRACT_KIND;
   }
 
 private:
