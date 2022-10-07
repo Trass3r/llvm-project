@@ -1007,6 +1007,12 @@ struct CodeAction {
   llvm::Optional<std::string> kind;
   const static llvm::StringLiteral QUICKFIX_KIND;
   const static llvm::StringLiteral REFACTOR_KIND;
+  const static llvm::StringLiteral REFACTOR_EXTRACT_KIND;
+  const static llvm::StringLiteral REFACTOR_INLINE_KIND;
+  const static llvm::StringLiteral REFACTOR_MOVE_KIND;
+  const static llvm::StringLiteral REFACTOR_REWRITE_KIND;
+  const static llvm::StringLiteral SOURCE_KIND;
+  const static llvm::StringLiteral SOURCE_ORGANIZE_IMPORTS_KIND;
   const static llvm::StringLiteral INFO_KIND;
 
   /// The diagnostics that this code action resolves.
