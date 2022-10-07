@@ -21,7 +21,7 @@ namespace {
 ///   ^^^^^^^^^^^^^^^^^^^^^
 /// After:
 ///   void /* entity.name.function.cpp */ f() { int /* variable.cpp */ abc; }
-class AnnotateHighlightings : public Tweak {
+class AnnotateHighlightings final : public Tweak {
 public:
   const char *id() const final;
 
@@ -29,9 +29,7 @@ public:
   Expected<Effect> apply(const Selection &Inputs) override;
 
   std::string title() const override { return "Annotate highlighting tokens"; }
-  llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
-  }
+  llvm::StringLiteral kind() const override { return CodeAction::INFO_KIND; }
   bool hidden() const override { return true; }
 };
 REGISTER_TWEAK(AnnotateHighlightings)
