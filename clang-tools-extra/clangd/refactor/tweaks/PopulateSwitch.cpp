@@ -47,7 +47,7 @@
 namespace clang {
 namespace clangd {
 namespace {
-class PopulateSwitch : public Tweak {
+class PopulateSwitch final : public Tweak {
   const char *id() const override;
   bool prepare(const Selection &Sel) override;
   Expected<Effect> apply(const Selection &Sel) override;

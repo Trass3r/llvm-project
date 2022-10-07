@@ -28,11 +28,11 @@ namespace {
 /// After:
 ///   #define FOO(X) X+X
 ///   10*a+10*a
-class ExpandMacro : public Tweak {
+class ExpandMacro final : public Tweak {
 public:
   const char *id() const final;
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
 
   bool prepare(const Selection &Inputs) override;

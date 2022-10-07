@@ -874,6 +874,12 @@ llvm::json::Value toJSON(const Command &C) {
 
 const llvm::StringLiteral CodeAction::QUICKFIX_KIND = "quickfix";
 const llvm::StringLiteral CodeAction::REFACTOR_KIND = "refactor";
+const llvm::StringLiteral CodeAction::REFACTOR_EXTRACT_KIND = "refactor.extract";
+const llvm::StringLiteral CodeAction::REFACTOR_INLINE_KIND = "refactor.inline";
+const llvm::StringLiteral CodeAction::REFACTOR_MOVE_KIND = "refactor.move";
+const llvm::StringLiteral CodeAction::REFACTOR_REWRITE_KIND = "refactor.rewrite";
+const llvm::StringLiteral CodeAction::SOURCE_KIND = "source";
+const llvm::StringLiteral CodeAction::SOURCE_ORGANIZE_IMPORTS_KIND = "source.organizeImports";
 const llvm::StringLiteral CodeAction::INFO_KIND = "info";
 const llvm::StringLiteral CodeAction::SHOW_REFERENCES =
     "clangd.action.showReferences";

@@ -169,11 +169,11 @@ initializerForParams(const SmallVector<MethodParameter, 8> &Params,
 
 /// Generate an initializer for an Objective-C class based on selected
 /// properties and instance variables.
-class ObjCMemberwiseInitializer : public Tweak {
+class ObjCMemberwiseInitializer final : public Tweak {
 public:
   const char *id() const final;
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
 
   bool prepare(const Selection &Inputs) override;
