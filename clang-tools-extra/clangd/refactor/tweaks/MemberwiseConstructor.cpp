@@ -30,11 +30,11 @@ namespace {
 //   S(int x, unique_ptr<double> y) : x(x), y(std::move(y)) {}
 //
 // We place the constructor inline, other tweaks are available to outline it.
-class MemberwiseConstructor : public Tweak {
+class MemberwiseConstructor final : public Tweak {
 public:
   const char *id() const final;
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_REWRITE_KIND;
   }
   std::string title() const override {
     return llvm::formatv("Define constructor");
