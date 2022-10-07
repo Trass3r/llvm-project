@@ -37,7 +37,7 @@ class FeatureModuleSet;
 
 /// An interface base for small context-sensitive refactoring actions.
 /// To implement a new tweak use the following pattern in a .cpp file:
-///   class MyTweak : public Tweak {
+///   class MyTweak final : public Tweak {
 ///   public:
 ///     const char* id() const override final; // defined by REGISTER_TWEAK.
 ///     // implement other methods here.

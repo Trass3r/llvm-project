@@ -373,13 +373,13 @@ SourceRange getDeletionRange(const FunctionDecl *FD,
 /// a.cc
 ///   #include "a.h"
 ///   void foo() { return; }
-class DefineOutline : public Tweak {
+class DefineOutline final : public Tweak {
 public:
   const char *id() const override;
 
   bool hidden() const override { return false; }
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_MOVE_KIND;
   }
   std::string title() const override {
     return "Move function body to out-of-line";
