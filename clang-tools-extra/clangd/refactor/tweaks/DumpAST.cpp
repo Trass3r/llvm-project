@@ -30,7 +30,7 @@ namespace {
 ///   CallExpr
 ///   |-DeclRefExpr fcall
 ///   `-StringLiteral "foo"
-class DumpAST : public Tweak {
+class DumpAST final : public Tweak {
 public:
   const char *id() const final;
 
@@ -83,7 +83,7 @@ llvm::Expected<Tweak::Effect> DumpAST::apply(const Selection &Inputs) {
 ///         .DeclRefExpr fcall
 ///        BinaryOperator 2 + 2
 ///          *IntegerLiteral 2
-class ShowSelectionTree : public Tweak {
+class ShowSelectionTree final : public Tweak {
 public:
   const char *id() const final;
 
@@ -104,7 +104,7 @@ REGISTER_TWEAK(ShowSelectionTree)
 /// Message:
 ///  foo -
 ///  {"containerName":null,"id":"CA2EBE44A1D76D2A","name":"foo","usr":"c:@F@foo#"}
-class DumpSymbol : public Tweak {
+class DumpSymbol final : public Tweak {
   const char *id() const final;
   bool prepare(const Selection &Inputs) override { return true; }
   Expected<Effect> apply(const Selection &Inputs) override {
@@ -132,7 +132,7 @@ REGISTER_TWEAK(DumpSymbol)
 ///        0 |   int foo
 ///          | [sizeof=4, dsize=4, align=4,
 ///          |  nvsize=4, nvalign=4]
-class DumpRecordLayout : public Tweak {
+class DumpRecordLayout final : public Tweak {
 public:
   const char *id() const final;
 

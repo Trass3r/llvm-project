@@ -382,12 +382,12 @@ addInlineIfInHeader(const FunctionDecl *FD) {
 ///
 /// a.cc:
 ///
-class DefineInline : public Tweak {
+class DefineInline final : public Tweak {
 public:
   const char *id() const final;
 
   llvm::StringLiteral kind() const override {
-    return CodeAction::REFACTOR_KIND;
+    return CodeAction::REFACTOR_MOVE_KIND;
   }
   std::string title() const override {
     return "Move function body to declaration";
