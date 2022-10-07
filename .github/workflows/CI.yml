@@ -66,7 +66,8 @@ jobs:
               -DLLVM_ENABLE_ZLIB=OFF \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF ${{ matrix.cmake_args }} ../llvm/
-        ninja -k4 install-clangd install-clang
+        ninja -k4 install-clangd
+        ninja -k4 install-clang
         ninja ClangdTests FileCheck
     - name: tests
       if: false
@@ -134,7 +135,7 @@ jobs:
         cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
           -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
           -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
-        ninja -k4 install-clangd install-clang
+        ninja -k4 install-clangd # install-clang
     - name: create package
       shell: bash
       run: cd install && 7z a "$GITHUB_WORKSPACE/clang.7z" *
