@@ -87,6 +87,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/FileUtilities.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/Timer.h"
 #include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Support/raw_ostream.h"
@@ -761,6 +762,7 @@ std::unique_ptr<ASTUnit> ASTUnit::LoadFromASTFile(
     bool OnlyLocalDecls, CaptureDiagsKind CaptureDiagnostics,
     bool AllowASTWithCompilerErrors, bool UserFilesAreVolatile,
     IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS) {
+  llvm::TimeTraceScope scope("LoadASTUnit", Filename);
   std::unique_ptr<ASTUnit> AST(new ASTUnit(true));
 
   // Recover resources if we crash before exiting this method.
