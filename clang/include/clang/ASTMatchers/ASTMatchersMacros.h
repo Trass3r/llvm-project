@@ -93,7 +93,7 @@
 /// The code should return true if 'Node' matches.
 #define AST_MATCHER(Type, DefineMatcher)                                       \
   namespace internal {                                                         \
-  class matcher_##DefineMatcher##Matcher                                       \
+  class matcher_##DefineMatcher##Matcher final                                 \
       : public ::clang::ast_matchers::internal::MatcherInterface<Type> {       \
   public:                                                                      \
     explicit matcher_##DefineMatcher##Matcher() = default;                     \
@@ -230,7 +230,7 @@
 #define AST_POLYMORPHIC_MATCHER(DefineMatcher, ReturnTypesF)                   \
   namespace internal {                                                         \
   template <typename NodeType>                                                 \
-  class matcher_##DefineMatcher##Matcher                                       \
+  class matcher_##DefineMatcher##Matcher final                                 \
       : public ::clang::ast_matchers::internal::MatcherInterface<NodeType> {   \
   public:                                                                      \
     bool matches(const NodeType &Node,                                         \
