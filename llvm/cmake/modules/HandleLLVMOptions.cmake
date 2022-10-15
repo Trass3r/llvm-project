@@ -572,9 +572,14 @@ if ( LLVM_COMPILER_IS_GCC_COMPATIBLE OR CMAKE_CXX_COMPILER_ID MATCHES "XL" )
 endif( LLVM_COMPILER_IS_GCC_COMPATIBLE OR CMAKE_CXX_COMPILER_ID MATCHES "XL" )
 
 # Modules enablement for GCC-compatible compilers:
+#if ( ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND LLVM_ENABLE_MODULES )
 if ( LLVM_COMPILER_IS_GCC_COMPATIBLE AND LLVM_ENABLE_MODULES )
   set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+  if (MSVC)
+  set(module_flags "-clang:-fmodules -clang:-fmodules-cache-path=${PROJECT_BINARY_DIR}/module.cache")
+  else()
   set(module_flags "-fmodules -fmodules-cache-path=${PROJECT_BINARY_DIR}/module.cache")
+  endif()
   if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     # On Darwin -fmodules does not imply -fcxx-modules.
     set(module_flags "${module_flags} -fcxx-modules")
@@ -584,8 +589,9 @@ if ( LLVM_COMPILER_IS_GCC_COMPATIBLE AND LLVM_ENABLE_MODULES )
   endif()
   if (LLVM_ENABLE_MODULE_DEBUGGING AND
       ((uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG") OR
+       (uppercase_CMAKE_BUILD_TYPE STREQUAL "RELEASE") OR
        (uppercase_CMAKE_BUILD_TYPE STREQUAL "RELWITHDEBINFO")))
-    set(module_flags "${module_flags} -gmodules")
+    set(module_flags "${module_flags} -clang:-gmodules")
   endif()
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${module_flags}")
 
@@ -603,7 +609,7 @@ if ( LLVM_COMPILER_IS_GCC_COMPATIBLE AND LLVM_ENABLE_MODULES )
   else()
     message(FATAL_ERROR "LLVM_ENABLE_MODULES is not supported by this compiler")
   endif()
-endif( LLVM_COMPILER_IS_GCC_COMPATIBLE AND LLVM_ENABLE_MODULES )
+endif()
 
 if (MSVC)
   if (NOT CLANG_CL)
@@ -648,7 +654,7 @@ if (MSVC)
           # v15.8.8. Re-evaluate the usefulness of this diagnostic when the bug
           # is fixed.
       -wd4709 # Suppress comma operator within array index expression
-
+      -wd4996
       # Ideally, we'd like this warning to be enabled, but even MSVC 2019 doesn't
       # support the 'aligned' attribute in the way that clang sources requires (for
       # any code that uses the LLVM_ALIGNAS macro), so this is must be disabled to
