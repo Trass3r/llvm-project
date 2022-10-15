@@ -737,6 +737,7 @@ if(MSVC)
   option(LLVM_BUILD_LLVM_C_DYLIB "Build LLVM-C.dll (Windows only)" ON)
   # Set this variable to OFF here so it can't be set with a command-line
   # argument.
+  set (CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
   set (LLVM_LINK_LLVM_DYLIB OFF)
 else()
   option(LLVM_LINK_LLVM_DYLIB "Link tools against the libllvm dynamic library" OFF)
