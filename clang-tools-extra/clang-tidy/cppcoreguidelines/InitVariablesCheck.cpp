@@ -9,6 +9,7 @@
 #include "InitVariablesCheck.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ParentMap.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
@@ -37,16 +38,23 @@ void InitVariablesCheck::storeOptions(ClangTidyOptions::OptionMap &Opts) {
 }
 
 void InitVariablesCheck::registerMatchers(MatchFinder *Finder) {
-  std::string BadDecl = "badDecl";
-  Finder->addMatcher(
+  auto localUndefinedVar =
       varDecl(unless(hasInitializer(anything())), unless(isInstantiated()),
-              isLocalVarDecl(), unless(isStaticLocal()), isDefinition(),
-              unless(hasParent(cxxCatchStmt())),
-              optionally(hasParent(declStmt(hasParent(
-                  cxxForRangeStmt(hasLoopVariable(varDecl().bind(BadDecl))))))),
-              unless(equalsBoundNode(BadDecl)))
-          .bind("vardecl"),
-      this);
+              hasLocalStorage(), unless(parmVarDecl()), isDefinition(),
+              hasAncestor(compoundStmt().bind("varscope")))
+          .bind("varDecl");
+  auto declRefToUninitVar =
+      declRefExpr(hasDeclaration(localUndefinedVar),
+                  hasAncestor(compoundStmt().bind("refscope")))
+          .bind("ref");
+  Finder->addMatcher(declRefToUninitVar, this);
+#if 0
+  declRefExpr(hasDeclaration(
+      varDecl(GlobalVarDecl, unless(isDefinition())).bind("referencee")));
+  Finder->addMatcher(
+                         .bind("vardecl"),
+                     this);
+#endif
 }
 
 void InitVariablesCheck::registerPPCallbacks(const SourceManager &SM,
@@ -55,8 +63,55 @@ void InitVariablesCheck::registerPPCallbacks(const SourceManager &SM,
   IncludeInserter.registerPreprocessor(PP);
 }
 
+static SourceLocation findSemiAfterLocation(SourceLocation loc, const ASTContext &Ctx,
+                                            bool IsDecl) {
+  const SourceManager &SM = Ctx.getSourceManager();
+  if (loc.isMacroID()) {
+    if (!Lexer::isAtEndOfMacroExpansion(loc, SM, Ctx.getLangOpts(), &loc))
+      return SourceLocation();
+  }
+  loc = Lexer::getLocForEndOfToken(loc, /*Offset=*/0, SM, Ctx.getLangOpts());
+
+  // Break down the source location.
+  std::pair<FileID, unsigned> locInfo = SM.getDecomposedLoc(loc);
+
+  // Try to load the file buffer.
+  bool invalidTemp = false;
+  StringRef file = SM.getBufferData(locInfo.first, &invalidTemp);
+  if (invalidTemp)
+    return SourceLocation();
+
+  const char *tokenBegin = file.data() + locInfo.second;
+
+  // Lex from the start of the given location.
+  Lexer lexer(SM.getLocForStartOfFile(locInfo.first), Ctx.getLangOpts(),
+              file.begin(), tokenBegin, file.end());
+  Token tok;
+  lexer.LexFromRawLexer(tok);
+  if (tok.isNot(tok::semi)) {
+    if (!IsDecl)
+      return SourceLocation();
+    // Declaration may be followed with other tokens; such as an __attribute,
+    // before ending with a semicolon.
+    return findSemiAfterLocation(tok.getLocation(), Ctx, /*IsDecl*/ true);
+  }
+
+  return tok.getLocation();
+}
+static SourceLocation findLocationAfterSemi(SourceLocation loc,
+                                            const ASTContext &Ctx,
+                                            bool IsDecl) {
+  SourceLocation SemiLoc = findSemiAfterLocation(loc, Ctx, IsDecl);
+  if (SemiLoc.isInvalid())
+    return SourceLocation();
+  return SemiLoc.getLocWithOffset(1);
+}
+
 void InitVariablesCheck::check(const MatchFinder::MatchResult &Result) {
-  const auto *MatchedDecl = Result.Nodes.getNodeAs<VarDecl>("vardecl");
+  const auto *varDecl = Result.Nodes.getNodeAs<VarDecl>("varDecl");
+  const auto *refExpr = Result.Nodes.getNodeAs<DeclRefExpr>("ref");
+  auto *varScope = Result.Nodes.getNodeAs<CompoundStmt>("varscope");
+  const auto *refScope = Result.Nodes.getNodeAs<CompoundStmt>("refscope");
   const ASTContext &Context = *Result.Context;
   const SourceManager &Source = Context.getSourceManager();
 
@@ -75,12 +130,52 @@ void InitVariablesCheck::check(const MatchFinder::MatchResult &Result) {
   //
   // Thus check that the variable name does
   // not come from a macro expansion.
-  if (MatchedDecl->getEndLoc().isMacroID())
+  if (varDecl->getEndLoc().isMacroID())
     return;
+  // varDecl->isThisDeclarationReferenced
 
-  QualType TypePtr = MatchedDecl->getType();
+  QualType TypePtr = varDecl->getType();
   llvm::Optional<const char *> InitializationString;
   bool AddMathInclude = false;
+  clang::ParentMap parentMap(const_cast<CompoundStmt *>(varScope));
+  const Stmt *v = refExpr;
+  const Stmt *res = nullptr;
+  uint32_t depth = 0;
+  /*
+int test2(int x)
+{
+    int i;
+
+    if (x)
+        i = 1;
+    else
+        i = 2;
+    return i;
+}*/
+  while (true) {
+    const Stmt *p = parentMap.getParent(v);
+    if (auto compound = dyn_cast<CompoundStmt>(p)) {
+      ++depth;
+      if (compound == varScope) {
+        res = v;
+        //res->dump();
+        break;
+      }
+    }
+    v = p;
+  }
+//  auto range = CharSourceRange::getTokenRange(varDecl->getSourceRange());
+  SourceLocation endLoc =
+      findLocationAfterSemi(varDecl->getInnerLocStart(), Context, true);
+  auto range = CharSourceRange::getTokenRange(varDecl->getInnerLocStart(), endLoc);
+
+  diag(varDecl->getLocation(), "variable %0 can be moved")
+      << varDecl
+      << FixItHint::CreateInsertionFromRange(
+             res->getBeginLoc(),
+             // varDecl->getLocation().getLocWithOffset(varDecl->getName().size()),
+             range)
+      << FixItHint::CreateRemoval(range);
 
   if (TypePtr->isEnumeralType())
     InitializationString = nullptr;
@@ -98,18 +193,16 @@ void InitVariablesCheck::check(const MatchFinder::MatchResult &Result) {
       InitializationString = " = NULL";
   }
 
-  if (InitializationString) {
+  if (false) {
     auto Diagnostic =
-        diag(MatchedDecl->getLocation(), "variable %0 is not initialized")
-        << MatchedDecl;
-    if (*InitializationString != nullptr)
-      Diagnostic << FixItHint::CreateInsertion(
-          MatchedDecl->getLocation().getLocWithOffset(
-              MatchedDecl->getName().size()),
-          *InitializationString);
+        diag(varDecl->getLocation(), "variable %0 is not initialized")
+        << varDecl
+        << FixItHint::CreateInsertion(varDecl->getLocation().getLocWithOffset(
+                                          varDecl->getName().size()),
+                                      InitializationString);
     if (AddMathInclude) {
-      Diagnostic << IncludeInserter.createIncludeInsertion(
-          Source.getFileID(MatchedDecl->getBeginLoc()), MathHeader);
+      Diagnostic << IncludeInserter->CreateIncludeInsertion(
+          Source.getFileID(varDecl->getBeginLoc()), MathHeader, false);
     }
   }
 }
