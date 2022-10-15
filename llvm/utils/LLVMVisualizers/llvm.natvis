@@ -332,9 +332,24 @@ For later versions of Visual Studio, no setup is required.
     <DisplayString Condition="!HasName">$(Type) {*VTy} anon {SubclassData}</DisplayString>
     <Expand>
       <Item Name="[Inst]" Condition="SubclassID > InstructionVal">(Instruction*)this</Item>
+      <!--
+      <Item Name="[Inst]" Condition="SubclassID > InstructionVal">((Instruction*)this)->getOpcodeName(SubclassID - InstructionVal)</Item>
+      <Item Name="[Type]">*VTy</Item>
+      -->
+      <!--
+      <TreeItems>
+        <HeadPointer>UseList</HeadPointer>
+        <LeftPointer>(Use*)(Prev.Value &amp; ~7)</LeftPointer>
+        <RightPointer>Next</RightPointer>
+        <ValueNode>this</ValueNode>
+      </TreeItems>
+-->
       <Item Name="Operands">(User*)this</Item>
       <LinkedListItems>
         <HeadPointer>UseList</HeadPointer>
+        <!--
+        <NextPointer>(Next &amp;&amp; Next != this) ? Next : *(Use**)(Prev.Value &amp; ~7)</NextPointer>
+        -->
         <NextPointer>Next</NextPointer>
         <ValueNode>Prev.Value &amp; 3 == 3 ? (User*)(this + 1) : (User*)(this + 2)</ValueNode>
       </LinkedListItems>
@@ -385,7 +400,30 @@ For later versions of Visual Studio, no setup is required.
 
   <Type Name="llvm::GlobalValue">
     <DisplayString>{this->getName()} {(LinkageTypes)Linkage} {(VisibilityTypes)Visibility} {(DLLStorageClassTypes)DllStorageClass} {(llvm::GlobalValue::ThreadLocalMode) ThreadLocal}</DisplayString>
+	<!--
+    <Expand>
+      <Item Name="[Linkage]">Linkage</Item>
+      <Item Name="[Visibility]">(VisibilityTypes) Visibility</Item>
+      <Item Name="[UnnamedAddr]">(bool) UnnamedAddr</Item>
+      <Item Name="[DllStorageClass]">(DLLStorageClassTypes) DllStorageClass</Item>
+      <Item Name="[ThreadLocal]">(ThreadLocalMode) ThreadLocal</Item>
+    </Expand>
+	-->
   </Type>
+
+<!--
+  <Type Name="llvm::Use">
+    <DisplayString Condition="Head == 0">{{ empty }}</DisplayString>
+    <DisplayString Condition="Head != 0">{{ head={Head} }}</DisplayString>
+    <Expand>
+      <LinkedListItems>
+        <HeadPointer>UseList</HeadPointer>
+        <NextPointer>Next</NextPointer>
+        <ValueNode>Val</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+-->
 
   <!-- TODO doesn't work cause it doesn't know the dynamic type -->
   <Type Name="llvm::ilist_node">
@@ -398,12 +436,25 @@ For later versions of Visual Studio, no setup is required.
     </Expand>
   </Type>
 
+  <!--
+  <Type Name="llvm::UnaryInstruction">
+    <Expand>
+      <LinkedListItems>
+        <HeadPointer>this</HeadPointer>
+        <NextPointer>Next</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  -->
+
   <Type Name="llvm::LLVMContext">
     <Expand>
       <ExpandedItem>pImpl</ExpandedItem>
     </Expand>
   </Type>
 
+  
   <Type Name="llvm::Module">
     <DisplayString>{ModuleID,s8} {TargetTriple}</DisplayString>
   </Type>
