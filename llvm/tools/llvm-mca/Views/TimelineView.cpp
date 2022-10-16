@@ -309,6 +309,49 @@ void TimelineView::printTimeline(raw_ostream &OS) const {
       ++IID;
     }
   }
+
+  FOS.flush();
+
+  std::error_code err;
+  raw_fd_ostream f("test.dot", err);
+  f << "\ndigraph test {\n";
+  struct InstData {
+    uint32_t timelineIdx;
+    uint32_t executionStartCycle;
+    bool operator<(const InstData &b) const { return executionStartCycle < b.executionStartCycle; }
+  };
+  // we need to sort the instructions by execution start
+  // we also insert a dummy entry node
+  std::vector<InstData> insts{{~0u, 0u}};
+  f << 'i' << ~0u << " [style = invis];\n";
+
+  // create nodes with asm instructions
+  for (uint32_t i = 0; i < Timeline.size(); ++i) {
+    insts.push_back({i, Timeline[i].CycleIssued});
+    f << 'i' << i << " [label = \"";
+    MCIP.printInst(&Source[i % Source.size()], f, "", STI);
+    f << "\", shape=box];\n";
+  }
+  std::stable_sort(insts.begin(), insts.end());
+  auto emitEdge = [&f](uint32_t i, uint32_t j) {
+    f << 'i' << i << " -> " << 'i' << j << '\n';
+  };
+  // create the edges
+  uint32_t lastI = 0;
+  for (uint32_t i = 1; i < insts.size(); ++i) {
+    // if instructions start getting executed at the same time they are independent
+    // create edges from the previous level node to all of them
+    if (insts[lastI].executionStartCycle == insts[i].executionStartCycle) {
+      emitEdge(insts[lastI - 1].timelineIdx, insts[i].timelineIdx);
+      continue;
+    }
+    // we reached a new execution level
+    // create edges from all previous level nodes
+    for (; lastI < i; ++lastI) {
+      emitEdge(insts[lastI].timelineIdx, insts[i].timelineIdx);
+    }
+  }
+  f << '}';
 }
 
 json::Value TimelineView::toJSON() const {
