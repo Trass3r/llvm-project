@@ -3,6 +3,7 @@ include(LLVMDistributionSupport)
 include(LLVMProcessSources)
 include(LLVM-Config)
 include(DetermineGCCCompatible)
+include(GenerateExportHeader)
 
 function(llvm_update_compile_flags name)
   get_property(sources TARGET ${name} PROPERTY SOURCES)
@@ -585,6 +586,16 @@ function(llvm_add_library name)
     add_library(${name} STATIC ${ALL_FILES})
   endif()
 
+  if(BUILD_SHARED_LIBS)
+  generate_export_header(${name} EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/exportHdrs/${name}_export.h)
+#  target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+ target_compile_options(${name} PRIVATE -D${name}_EXPORTS)
+ target_include_directories(${name} PUBLIC ${CMAKE_BINARY_DIR}/exportHdrs)
+#install(FILES
+# ${PROJECT_BINARY_DIR}/${name}_export.h DESTINATION ${INCLUDE_INSTALL_DIR}
+#)
+  endif()
+
   if(ARG_COMPONENT_LIB)
     set_target_properties(${name} PROPERTIES LLVM_COMPONENT TRUE)
     set_property(GLOBAL APPEND PROPERTY LLVM_COMPONENT_LIBS ${name})
@@ -994,7 +1005,9 @@ macro(add_llvm_executable name)
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
   # macros.
-  set_target_properties( ${name} PROPERTIES DEFINE_SYMBOL "" )
+  if (LLVM_ENABLE_MODULES AND NOT BUILD_SHARED_LIBS)
+    set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
+  endif()
 
   if (LLVM_EXPORTED_SYMBOL_FILE)
     add_llvm_symbol_exports( ${name} ${LLVM_EXPORTED_SYMBOL_FILE} )
