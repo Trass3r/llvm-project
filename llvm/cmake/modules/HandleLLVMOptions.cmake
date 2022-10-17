@@ -543,6 +543,9 @@ if( MSVC )
   endif (LLVM_ENABLE_WERROR)
 
   append("/Zc:inline" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  if (CLANG_CL)
+    append("/Zc:dllexportInlines-" CMAKE_CXX_FLAGS)
+  endif()
 
   if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Enable standards-conforming preprocessor.
