@@ -84,13 +84,6 @@ void traverseDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
       Sub.locations =
           lookupIndex(Index, Limit, Path, D, RelationKind::BaseOf);
     }
-    // bases codelens is only useful on forward decls
-    if (!CXXRD->isThisDeclarationADefinition()) {
-      for (const auto *P : typeParents(CXXRD)) {
-        if (auto Loc = declToLocation(P->getCanonicalDecl()))
-          Super.locations.emplace_back(*Loc);
-      }
-    }
   } else if (auto *CXXMD = dyn_cast<CXXMethodDecl>(D)) {
     if (CXXMD->isVirtual()) {
       Sub.locations =
