@@ -60,6 +60,7 @@ if(CXX_SUPPORTS_SUGGEST_OVERRIDE_FLAG)
   set_target_properties(llvm_gtest PROPERTIES INTERFACE_COMPILE_OPTIONS "-Wno-suggest-override")
 endif()
 
+
 if (NOT LLVM_ENABLE_THREADS)
   target_compile_definitions(llvm_gtest PUBLIC GTEST_HAS_PTHREAD=0)
 endif ()

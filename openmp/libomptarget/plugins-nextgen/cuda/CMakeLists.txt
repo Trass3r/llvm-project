@@ -91,7 +91,7 @@ add_dependencies(omptarget.rtl.cuda.nextgen omptarget.devicertl.nvptx)
 install(TARGETS omptarget.rtl.cuda.nextgen LIBRARY DESTINATION "${OPENMP_INSTALL_LIBDIR}")
 set_target_properties(omptarget.rtl.cuda.nextgen PROPERTIES
   INSTALL_RPATH "$ORIGIN" BUILD_RPATH "$ORIGIN:${CMAKE_CURRENT_BINARY_DIR}/.."
-  CXX_VISIBILITY_PRESET protected)
+  )#CXX_VISIBILITY_PRESET protected)
 
 target_include_directories(omptarget.rtl.cuda.nextgen PRIVATE
   ${LIBOMPTARGET_INCLUDE_DIR}

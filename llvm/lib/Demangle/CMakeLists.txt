@@ -10,3 +10,5 @@ add_llvm_component_library(LLVMDemangle
   "${LLVM_MAIN_INCLUDE_DIR}/llvm/Demangle"
 
 )
+
+target_precompile_headers(LLVMDemangle PRIVATE <cstring> <cstddef> <cstdint> <cmath> <algorithm> <string> <utility> <type_traits> <vector> <memory> <iterator> <variant> <limits> <optional> <chrono>)

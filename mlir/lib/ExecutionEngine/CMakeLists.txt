@@ -161,7 +161,7 @@ add_mlir_library(mlir_async_runtime
   LINK_LIBS PUBLIC
   ${LLVM_PTHREAD_LIB}
 )
-set_property(TARGET mlir_async_runtime PROPERTY CXX_VISIBILITY_PRESET hidden)
+#set_property(TARGET mlir_async_runtime PROPERTY CXX_VISIBILITY_PRESET hidden)
 target_compile_definitions(mlir_async_runtime PRIVATE mlir_async_runtime_EXPORTS)
 
 if(MLIR_ENABLE_CUDA_RUNNER)

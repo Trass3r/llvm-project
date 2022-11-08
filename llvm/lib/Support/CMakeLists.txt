@@ -288,6 +288,8 @@ add_llvm_component_library(LLVMSupport
   Demangle
   )
 
+target_precompile_headers(LLVMSupport PRIVATE $<$<COMPILE_LANGUAGE:CXX>:<cstring$<ANGLE-R> <cstddef$<ANGLE-R> <cstdint$<ANGLE-R> <cmath$<ANGLE-R> <algorithm$<ANGLE-R> <string$<ANGLE-R> <utility$<ANGLE-R> <type_traits$<ANGLE-R> <vector$<ANGLE-R> <memory$<ANGLE-R> <iterator$<ANGLE-R> <variant$<ANGLE-R> <limits$<ANGLE-R> <optional$<ANGLE-R> <chrono$<ANGLE-R>>)
+
 set(llvm_system_libs ${system_libs})
 
 # This block is only needed for llvm-config. When we deprecate llvm-config and
