@@ -100,7 +100,7 @@ target_include_directories(PluginCommon
 
 set_target_properties(PluginCommon PROPERTIES
   POSITION_INDEPENDENT_CODE ON
-  CXX_VISIBILITY_PRESET protected)
+  )#CXX_VISIBILITY_PRESET protected)
 
 add_subdirectory(OMPT)
 

@@ -67,4 +67,4 @@ target_include_directories(OMPT
 
 set_target_properties(OMPT PROPERTIES
   POSITION_INDEPENDENT_CODE ON
-  CXX_VISIBILITY_PRESET protected)
+)#CXX_VISIBILITY_PRESET protected)
