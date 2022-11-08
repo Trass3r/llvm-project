@@ -66,7 +66,7 @@ function(add_target_library target_name lib_name)
     target_link_libraries(${target_name} PRIVATE
     "-Wl,--version-script=${common_dir}/../exports")
   endif()
-  set_target_properties(${target_name} PROPERTIES CXX_VISIBILITY_PRESET protected)
+  #set_target_properties(${target_name} PROPERTIES CXX_VISIBILITY_PRESET protected)
 endfunction()
 
 add_subdirectory(amdgpu)
