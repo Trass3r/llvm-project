@@ -2,6 +2,11 @@ name: CI
 
 on:
   workflow_dispatch:
+    inputs:
+      disablepch:
+        description: 'Disable PCH'
+        required: false
+        type: boolean
   push:
   pull_request:
     branches: main
@@ -67,7 +72,7 @@ jobs:
               -DLLVM_ENABLE_ZLIB=OFF \
               -DLLVM_ENABLE_LIBCXX=${{ matrix.stdlib == 'libc++' && 'ON' || 'OFF' }} \
               -DLLVM_ENABLE_MODULES=${{ matrix.modules }} \
-              -DCMAKE_DISABLE_PRECOMPILE_HEADERS=${{ matrix.modules }} \
+              -DCMAKE_DISABLE_PRECOMPILE_HEADERS=${{ matrix.modules || inputs.disablepch }} \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_LLD=ON
         ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
