@@ -196,7 +196,7 @@ if(LLVM_ENABLE_PIC)
     LINK_LIBS PUBLIC
     ${LLVM_PTHREAD_LIB}
   )
-  set_property(TARGET mlir_async_runtime PROPERTY CXX_VISIBILITY_PRESET hidden)
+  #set_property(TARGET mlir_async_runtime PROPERTY CXX_VISIBILITY_PRESET hidden)
   target_compile_definitions(mlir_async_runtime PRIVATE mlir_async_runtime_EXPORTS)
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Don't export symbols from link-time dependencies, these are internal

@@ -647,7 +647,7 @@ function(add_mlir_public_c_api_library name)
   # the exports via a shared library.
   set_target_properties(obj.${name}
     PROPERTIES
-    CXX_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET default
   )
   target_compile_definitions(obj.${name}
     PRIVATE
