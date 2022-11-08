@@ -541,6 +541,8 @@ function(llvm_add_library name)
       ${ALL_FILES}
       )
     llvm_update_compile_flags(${obj_name})
+    message(STATUS "Reusing PCH for library ${obj_name}")
+    target_precompile_headers(${obj_name} REUSE_FROM LLVMDemangle)
     if(CMAKE_GENERATOR STREQUAL "Xcode")
       set(DUMMY_FILE ${CMAKE_CURRENT_BINARY_DIR}/Dummy.c)
       file(WRITE ${DUMMY_FILE} "// This file intentionally empty\n")
@@ -627,6 +629,11 @@ function(llvm_add_library name)
     if(TARGET ${obj_name})
       target_compile_options(${obj_name} PUBLIC /Zc:dllexportInlines-)
     endif()
+  endif()
+
+  if(NOT ${name} STREQUAL "LLVMDemangle" AND NOT ${name} STREQUAL "LLVMSupport" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
+    message(STATUS "Reusing PCH for library ${name}")
+    target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
   endif()
 
   if(ARG_COMPONENT_LIB)
@@ -1138,6 +1145,12 @@ macro(add_llvm_executable name)
      MSVC AND CMAKE_CXX_COMPILER_ID MATCHES Clang)
     # This has to match how the libraries the executable is linked to are built or there be linker errors.
     target_compile_options(${name} PRIVATE /Zc:dllexportInlines-)
+  endif()
+
+  get_property(sources TARGET ${name} PROPERTY SOURCES)
+  if(NOT "${sources}" MATCHES "\\.c(;|$)" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
+    message(STATUS "Reusing PCH for executable ${name}")
+    target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
   endif()
 endmacro(add_llvm_executable name)
 
