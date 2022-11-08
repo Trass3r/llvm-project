@@ -541,6 +541,8 @@ function(llvm_add_library name)
       ${ALL_FILES}
       )
     llvm_update_compile_flags(${obj_name})
+    message(STATUS "Reusing PCH for library ${obj_name}")
+    target_precompile_headers(${obj_name} REUSE_FROM LLVMDemangle)
     if(CMAKE_GENERATOR STREQUAL "Xcode")
       set(DUMMY_FILE ${CMAKE_CURRENT_BINARY_DIR}/Dummy.c)
       file(WRITE ${DUMMY_FILE} "// This file intentionally empty\n")
@@ -612,6 +614,11 @@ function(llvm_add_library name)
     add_library(${name} STATIC ${ALL_FILES})
   endif()
   set_target_properties(${name} PROPERTIES FOLDER "${subproject_title}/Libraries")
+
+  if(NOT ${name} STREQUAL "LLVMDemangle" AND NOT ${name} STREQUAL "LLVMSupport" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
+    message(STATUS "Reusing PCH for library ${name}")
+    target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
+  endif()
 
   if(ARG_COMPONENT_LIB)
     set_target_properties(${name} PROPERTIES LLVM_COMPONENT TRUE)
@@ -1083,6 +1090,12 @@ macro(add_llvm_executable name)
   endif()
 
   llvm_codesign(${name} ENTITLEMENTS ${ARG_ENTITLEMENTS} BUNDLE_PATH ${ARG_BUNDLE_PATH})
+
+  get_property(sources TARGET ${name} PROPERTY SOURCES)
+  if(NOT "${sources}" MATCHES "\\.c(;|$)" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
+    message(STATUS "Reusing PCH for executable ${name}")
+    target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
+  endif()
 endmacro(add_llvm_executable name)
 
 # add_llvm_pass_plugin(name [NO_MODULE] ...)
