@@ -16,7 +16,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY VEToolChain : public Linux {
+class LLVM_LIBRARY_VISIBILITY VEToolChain final : public Linux {
 public:
   VEToolChain(const Driver &D, const llvm::Triple &Triple,
               const llvm::opt::ArgList &Args);

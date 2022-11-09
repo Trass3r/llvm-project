@@ -15,7 +15,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY PPCFreeBSDToolChain : public FreeBSD {
+class LLVM_LIBRARY_VISIBILITY PPCFreeBSDToolChain final : public FreeBSD {
 public:
   PPCFreeBSDToolChain(const Driver &D, const llvm::Triple &Triple,
                       const llvm::opt::ArgList &Args)

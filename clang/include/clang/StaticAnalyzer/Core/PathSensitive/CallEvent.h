@@ -976,7 +976,7 @@ public:
 /// Represents a call to a C++ constructor.
 ///
 /// Example: \c T(1)
-class CXXConstructorCall : public AnyCXXConstructorCall {
+class CXXConstructorCall final : public AnyCXXConstructorCall {
   friend class CallEventManager;
 
 protected:
@@ -1240,7 +1240,7 @@ enum ObjCMessageKind { OCM_PropertyAccess, OCM_Subscript, OCM_Message };
 /// Represents any expression that calls an Objective-C method.
 ///
 /// This includes all of the kinds listed in ObjCMessageKind.
-class ObjCMethodCall : public CallEvent {
+class ObjCMethodCall final : public CallEvent {
   friend class CallEventManager;
 
   const PseudoObjectExpr *getContainingPseudoObjectExpr() const;

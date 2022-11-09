@@ -18,7 +18,7 @@
 
 namespace llvm {
 
-class ARMInstPrinter : public MCInstPrinter {
+class ARMInstPrinter final : public MCInstPrinter {
 public:
   ARMInstPrinter(const MCAsmInfo &MAI, const MCInstrInfo &MII,
                  const MCRegisterInfo &MRI);

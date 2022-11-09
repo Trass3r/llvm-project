@@ -59,7 +59,7 @@ void getHexagonTargetFeatures(const Driver &D, const llvm::Triple &Triple,
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY HexagonToolChain : public Linux {
+class LLVM_LIBRARY_VISIBILITY HexagonToolChain final : public Linux {
 protected:
   GCCVersion GCCLibAndIncVersion;
   Tool *buildAssembler() const override;
