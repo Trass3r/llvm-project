@@ -97,7 +97,7 @@ public:
 
 /// This implements the Apple accelerator table format, a precursor of the
 /// DWARF 5 accelerator table format.
-class AppleAcceleratorTable : public DWARFAcceleratorTable {
+class AppleAcceleratorTable final : public DWARFAcceleratorTable {
   struct Header {
     uint32_t Magic;
     uint16_t Version;
@@ -380,7 +380,7 @@ public:
 /// The last segment consists of a list of entries, which is a 0-terminated list
 /// referenced by the name table and interpreted with the help of the
 /// abbreviation table.
-class DWARFDebugNames : public DWARFAcceleratorTable {
+class DWARFDebugNames final : public DWARFAcceleratorTable {
 public:
   class NameIndex;
   class NameIterator;
@@ -509,7 +509,7 @@ public:
 
   /// Error returned by NameIndex::getEntry to report it has reached the end of
   /// the entry list.
-  class SentinelError : public ErrorInfo<SentinelError> {
+  class SentinelError final : public ErrorInfo<SentinelError> {
   public:
     static char ID;
 

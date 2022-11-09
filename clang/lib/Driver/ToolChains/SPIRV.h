@@ -22,7 +22,7 @@ void constructTranslateCommand(Compilation &C, const Tool &T,
                                const InputInfo &Input,
                                const llvm::opt::ArgStringList &Args);
 
-class LLVM_LIBRARY_VISIBILITY Translator : public Tool {
+class LLVM_LIBRARY_VISIBILITY Translator final : public Tool {
 public:
   Translator(const ToolChain &TC)
       : Tool("SPIR-V::Translator", "llvm-spirv", TC) {}

@@ -542,8 +542,8 @@ public:
 };
 
 /// Represent a C++ namespace.
-class NamespaceDecl : public NamedDecl, public DeclContext,
-                      public Redeclarable<NamespaceDecl>
+class NamespaceDecl final : public NamedDecl, public DeclContext,
+                            public Redeclarable<NamespaceDecl>
 {
 
   enum Flags : unsigned { F_Inline = 1 << 0, F_Nested = 1 << 1 };
@@ -1758,7 +1758,7 @@ public:
 };
 
 /// Represents a parameter to a function.
-class ParmVarDecl : public VarDecl {
+class ParmVarDecl final : public VarDecl {
 public:
   enum { MaxFunctionScopeDepth = 255 };
   enum { MaxFunctionScopeIndex = 255 };
@@ -3876,7 +3876,7 @@ public:
 /// Represents an enum.  In C++11, enums can be forward-declared
 /// with a fixed underlying type, and in C we allow them to be forward-declared
 /// with no underlying type as an extension.
-class EnumDecl : public TagDecl {
+class EnumDecl final : public TagDecl {
   // This class stores some data in DeclContext::EnumDeclBits
   // to save some space. Use the provided accessors to access it.
 
@@ -4503,7 +4503,7 @@ public:
 /// Represents a block literal declaration, which is like an
 /// unnamed FunctionDecl.  For example:
 /// ^{ statement-body }   or   ^(int arg1, float arg2){ statement-body }
-class BlockDecl : public Decl, public DeclContext {
+class BlockDecl final : public Decl, public DeclContext {
   // This class stores some data in DeclContext::BlockDeclBits
   // to save some space. Use the provided accessors to access it.
 public:

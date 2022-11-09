@@ -564,7 +564,7 @@ protected:
 };
 
 /// DWARF Common Information Entry (CIE)
-class CIE : public FrameEntry {
+class CIE final : public FrameEntry {
 public:
   // CIEs (and FDEs) are simply container classes, so the only sensible way to
   // create them is by providing the full parsed contents in the constructor.
@@ -626,7 +626,7 @@ private:
 };
 
 /// DWARF Frame Description Entry (FDE)
-class FDE : public FrameEntry {
+class FDE final : public FrameEntry {
 public:
   FDE(bool IsDWARF64, uint64_t Offset, uint64_t Length, uint64_t CIEPointer,
       uint64_t InitialLocation, uint64_t AddressRange, CIE *Cie,

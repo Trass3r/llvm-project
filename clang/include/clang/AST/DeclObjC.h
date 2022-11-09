@@ -137,7 +137,7 @@ enum class ObjCImplementationControl { None, Required, Optional };
 /// A selector represents a unique name for a method. The selector names for
 /// the above methods are setMenu:, menu, replaceSubview:with:, and defaultMenu.
 ///
-class ObjCMethodDecl : public NamedDecl, public DeclContext {
+class ObjCMethodDecl final : public NamedDecl, public DeclContext {
   // This class stores some data in DeclContext::ObjCMethodDeclBits
   // to save some space. Use the provided accessors to access it.
 
@@ -1149,8 +1149,8 @@ public:
 ///   Unlike C++, ObjC is a single-rooted class model. In Cocoa, classes
 ///   typically inherit from NSObject (an exception is NSProxy).
 ///
-class ObjCInterfaceDecl : public ObjCContainerDecl
-                        , public Redeclarable<ObjCInterfaceDecl> {
+class ObjCInterfaceDecl final : public ObjCContainerDecl,
+                                public Redeclarable<ObjCInterfaceDecl> {
   friend class ASTContext;
   friend class ODRDiagsEmitter;
 
@@ -1947,7 +1947,7 @@ private:
 ///     id canBePackage; // framework visibility (not available in C++).
 ///   }
 ///
-class ObjCIvarDecl : public FieldDecl {
+class ObjCIvarDecl final : public FieldDecl {
   void anchor() override;
 
 public:
@@ -2025,7 +2025,7 @@ private:
 };
 
 /// Represents a field declaration created by an \@defs(...).
-class ObjCAtDefsFieldDecl : public FieldDecl {
+class ObjCAtDefsFieldDecl final : public FieldDecl {
   ObjCAtDefsFieldDecl(DeclContext *DC, SourceLocation StartLoc,
                       SourceLocation IdLoc, IdentifierInfo *Id,
                       QualType T, Expr *BW)

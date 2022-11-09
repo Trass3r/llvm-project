@@ -24,7 +24,7 @@ namespace clang {
 namespace ento {
 namespace retaincountchecker {
 
-class RefCountBug : public BugType {
+class RefCountBug final : public BugType {
 public:
   enum RefCountBugKind {
     UseAfterRelease,
