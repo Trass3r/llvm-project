@@ -89,7 +89,7 @@ void MultiplexASTDeserializationListener::ModuleImportRead(
 
 // This ASTMutationListener forwards its notifications to a set of
 // child listeners.
-class MultiplexASTMutationListener : public ASTMutationListener {
+class MultiplexASTMutationListener final : public ASTMutationListener {
 public:
   // Does NOT take ownership of the elements in L.
   MultiplexASTMutationListener(ArrayRef<ASTMutationListener*> L);

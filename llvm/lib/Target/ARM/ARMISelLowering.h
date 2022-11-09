@@ -396,7 +396,7 @@ class VectorType;
   //===--------------------------------------------------------------------===//
   //  ARMTargetLowering - ARM Implementation of the TargetLowering interface
 
-  class ARMTargetLowering : public TargetLowering {
+  class ARMTargetLowering final : public TargetLowering {
     // Copying needed for an outgoing byval argument.
     enum ByValCopyKind {
       // Argument is already in the correct location, no copy needed.

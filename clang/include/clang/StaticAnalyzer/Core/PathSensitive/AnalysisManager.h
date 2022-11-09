@@ -28,7 +28,7 @@ class CodeInjector;
 namespace ento {
   class CheckerManager;
 
-class AnalysisManager : public BugReporterData {
+class AnalysisManager final : public BugReporterData {
   virtual void anchor();
   AnalysisDeclContextManager AnaCtxMgr;
 

@@ -562,7 +562,7 @@ enum : unsigned { PTR32_SPTR = 270, PTR32_UPTR = 271, PTR64 = 272 };
 
 class AArch64Subtarget;
 
-class AArch64TargetLowering : public TargetLowering {
+class AArch64TargetLowering final : public TargetLowering {
 public:
   explicit AArch64TargetLowering(const TargetMachine &TM,
                                  const AArch64Subtarget &STI);

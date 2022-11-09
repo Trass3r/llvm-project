@@ -876,7 +876,7 @@ struct coff_dynamic_relocation64_v2 {
   support::ulittle32_t Flags;
 };
 
-class COFFObjectFile : public ObjectFile {
+class COFFObjectFile final : public ObjectFile {
 private:
   COFFObjectFile(MemoryBufferRef Object);
 

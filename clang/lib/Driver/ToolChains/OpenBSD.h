@@ -50,7 +50,7 @@ public:
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY OpenBSD : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY OpenBSD final : public Generic_ELF {
 public:
   OpenBSD(const Driver &D, const llvm::Triple &Triple,
           const llvm::opt::ArgList &Args);

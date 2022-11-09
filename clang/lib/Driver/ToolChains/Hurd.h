@@ -16,7 +16,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY Hurd : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY Hurd final : public Generic_ELF {
 public:
   Hurd(const Driver &D, const llvm::Triple &Triple,
        const llvm::opt::ArgList &Args);

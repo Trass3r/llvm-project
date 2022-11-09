@@ -386,7 +386,7 @@ struct LazySpecializationInfoLookupTable;
 /// The AST reader provides lazy de-serialization of declarations, as
 /// required when traversing the AST. Only those AST nodes that are
 /// actually required will be de-serialized.
-class ASTReader
+class ASTReader final
   : public ExternalPreprocessorSource,
     public ExternalPreprocessingRecordSource,
     public ExternalHeaderFileInfoSource,

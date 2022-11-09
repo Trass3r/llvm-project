@@ -185,7 +185,7 @@ public:
 
 /// 'list<Ty>' - Represent a list of element values, all of which must be of
 /// the specified type. The type is stored in ElementTy.
-class ListRecTy : public RecTy {
+class ListRecTy final : public RecTy {
   friend const ListRecTy *RecTy::getListTy() const;
 
   const RecTy *ElementTy;

@@ -123,7 +123,7 @@ struct WasmSegment {
   wasm::WasmDataSegment Data;
 };
 
-class WasmObjectFile : public ObjectFile {
+class WasmObjectFile final : public ObjectFile {
 
 public:
   WasmObjectFile(MemoryBufferRef Object, Error &Err);

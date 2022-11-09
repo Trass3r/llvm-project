@@ -529,7 +529,7 @@ struct XCOFFRelocation64 : XCOFFRelocation<llvm::support::ubig64_t> {};
 
 class XCOFFSymbolRef;
 
-class XCOFFObjectFile : public ObjectFile {
+class XCOFFObjectFile final : public ObjectFile {
 private:
   const void *FileHeader = nullptr;
   const void *AuxiliaryHeader = nullptr;

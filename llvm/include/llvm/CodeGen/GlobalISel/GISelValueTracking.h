@@ -26,7 +26,7 @@ namespace llvm {
 class TargetLowering;
 class DataLayout;
 
-class GISelValueTracking : public GISelChangeObserver {
+class GISelValueTracking final : public GISelChangeObserver {
   MachineFunction &MF;
   MachineRegisterInfo &MRI;
   const TargetLowering &TL;

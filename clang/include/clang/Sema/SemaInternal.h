@@ -78,7 +78,7 @@ getDepthAndIndex(UnexpandedParameterPack UPP) {
   return getDepthAndIndex(cast<NamedDecl *>(UPP.first));
 }
 
-class TypoCorrectionConsumer : public VisibleDeclConsumer {
+class TypoCorrectionConsumer final : public VisibleDeclConsumer {
   typedef SmallVector<TypoCorrection, 1> TypoResultList;
   typedef llvm::StringMap<TypoResultList> TypoResultsMap;
   typedef std::map<unsigned, TypoResultsMap> TypoEditDistanceMap;
