@@ -954,7 +954,7 @@ SpecEntryTraits<FunctionTemplateSpecializationInfo> {
 };
 
 /// Declaration of a template function.
-class FunctionTemplateDecl : public RedeclarableTemplateDecl {
+class FunctionTemplateDecl final : public RedeclarableTemplateDecl {
 protected:
   friend class FunctionDecl;
 
@@ -2228,7 +2228,7 @@ public:
 };
 
 /// Declaration of a class template.
-class ClassTemplateDecl : public RedeclarableTemplateDecl {
+class ClassTemplateDecl final : public RedeclarableTemplateDecl {
 protected:
   /// Data that is common to all of the declarations of a given
   /// class template.

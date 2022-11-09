@@ -95,7 +95,7 @@ public:
 
 // Runs fatbinary, which combines GPU object files ("cubin" files) and/or PTX
 // assembly into a single output file.
-class LLVM_LIBRARY_VISIBILITY FatBinary : public Tool {
+class LLVM_LIBRARY_VISIBILITY FatBinary final : public Tool {
 public:
   FatBinary(const ToolChain &TC) : Tool("NVPTX::Linker", "fatbinary", TC) {}
 
@@ -184,7 +184,7 @@ private:
   bool Freestanding = false;
 };
 
-class LLVM_LIBRARY_VISIBILITY CudaToolChain : public NVPTXToolChain {
+class LLVM_LIBRARY_VISIBILITY CudaToolChain final : public NVPTXToolChain {
 public:
   CudaToolChain(const Driver &D, const llvm::Triple &Triple,
                 const ToolChain &HostTC, const llvm::opt::ArgList &Args);

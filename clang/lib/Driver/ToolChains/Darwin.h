@@ -48,7 +48,7 @@ public:
       : Tool(Name, ShortName, TC) {}
 };
 
-class LLVM_LIBRARY_VISIBILITY Assembler : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY Assembler final : public MachOTool {
 public:
   Assembler(const ToolChain &TC)
       : MachOTool("darwin::Assembler", "assembler", TC) {}
@@ -61,7 +61,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public MachOTool {
   bool NeedsTempPath(const InputInfoList &Inputs) const;
   void AddLinkArgs(Compilation &C, const llvm::opt::ArgList &Args,
                    llvm::opt::ArgStringList &CmdArgs,
@@ -80,7 +80,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY StaticLibTool : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY StaticLibTool final : public MachOTool {
 public:
   StaticLibTool(const ToolChain &TC)
       : MachOTool("darwin::StaticLibTool", "static-lib-linker", TC) {}
@@ -94,7 +94,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Lipo : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY Lipo final : public MachOTool {
 public:
   Lipo(const ToolChain &TC) : MachOTool("darwin::Lipo", "lipo", TC) {}
 
@@ -106,7 +106,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Dsymutil : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY Dsymutil final : public MachOTool {
 public:
   Dsymutil(const ToolChain &TC)
       : MachOTool("darwin::Dsymutil", "dsymutil", TC) {}
@@ -120,7 +120,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY VerifyDebug : public MachOTool {
+class LLVM_LIBRARY_VISIBILITY VerifyDebug final : public MachOTool {
 public:
   VerifyDebug(const ToolChain &TC)
       : MachOTool("darwin::VerifyDebug", "dwarfdump", TC) {}
@@ -599,7 +599,7 @@ public:
 };
 
 /// DarwinClang - The Darwin toolchain used by Clang.
-class LLVM_LIBRARY_VISIBILITY DarwinClang : public Darwin {
+class LLVM_LIBRARY_VISIBILITY DarwinClang final : public Darwin {
 public:
   DarwinClang(const Driver &D, const llvm::Triple &Triple,
               const llvm::opt::ArgList &Args);

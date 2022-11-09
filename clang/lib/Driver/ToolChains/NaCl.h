@@ -17,7 +17,7 @@ namespace clang {
 namespace driver {
 namespace tools {
 namespace nacltools {
-class LLVM_LIBRARY_VISIBILITY AssemblerARM : public gnutools::Assembler {
+class LLVM_LIBRARY_VISIBILITY AssemblerARM final : public gnutools::Assembler {
 public:
   AssemblerARM(const ToolChain &TC) : gnutools::Assembler(TC) {}
 
@@ -44,7 +44,7 @@ public:
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY NaClToolChain : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY NaClToolChain final : public Generic_ELF {
 public:
   NaClToolChain(const Driver &D, const llvm::Triple &Triple,
                 const llvm::opt::ArgList &Args);

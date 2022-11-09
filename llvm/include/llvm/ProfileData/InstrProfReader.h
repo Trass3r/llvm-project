@@ -678,7 +678,7 @@ public:
 };
 
 /// Reader for the indexed binary instrprof format.
-class IndexedInstrProfReader : public InstrProfReader {
+class IndexedInstrProfReader final : public InstrProfReader {
 private:
   /// The profile data file contents.
   std::unique_ptr<MemoryBuffer> DataBuffer;

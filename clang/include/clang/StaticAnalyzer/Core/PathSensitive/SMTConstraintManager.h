@@ -28,7 +28,7 @@ REGISTER_TRAIT_WITH_PROGRAMSTATE(ConstraintSMT, ConstraintSMTType)
 namespace clang {
 namespace ento {
 
-class SMTConstraintManager : public clang::ento::SimpleConstraintManager {
+class SMTConstraintManager final : public clang::ento::SimpleConstraintManager {
   mutable llvm::SMTSolverRef Solver = llvm::CreateZ3Solver();
 
 public:

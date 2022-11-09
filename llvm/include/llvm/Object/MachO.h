@@ -403,7 +403,7 @@ private:
 };
 using fixup_iterator = content_iterator<MachOChainedFixupEntry>;
 
-class MachOObjectFile : public ObjectFile {
+class MachOObjectFile final : public ObjectFile {
 public:
   struct LoadCommandInfo {
     const char *Ptr;      // Where in memory the load command is.

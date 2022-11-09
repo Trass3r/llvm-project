@@ -55,7 +55,7 @@ namespace clang {
 /// parsing units of the grammar, productions are invoked to handle whatever has
 /// been read.
 ///
-class Parser : public CodeCompletionHandler {
+class Parser final : public CodeCompletionHandler {
   friend class ColonProtectionRAIIObject;
   friend class ParsingOpenMPDirectiveRAII;
   friend class ParsingOpenACCDirectiveRAII;

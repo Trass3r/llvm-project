@@ -156,7 +156,7 @@ void Sema::ActOnTranslationUnitScope(Scope *S) {
 namespace clang {
 namespace sema {
 
-class SemaPPCallbacks : public PPCallbacks {
+class SemaPPCallbacks final : public PPCallbacks {
   Sema *S = nullptr;
   llvm::SmallVector<SourceLocation, 8> IncludeStack;
   llvm::SmallVector<llvm::TimeTraceProfilerEntry *, 8> ProfilerStack;

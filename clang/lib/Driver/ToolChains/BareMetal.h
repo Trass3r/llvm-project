@@ -19,7 +19,7 @@ namespace driver {
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY BareMetal : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY BareMetal final : public ToolChain {
 public:
   BareMetal(const Driver &D, const llvm::Triple &Triple,
             const llvm::opt::ArgList &Args);
@@ -85,7 +85,7 @@ private:
 namespace tools {
 namespace baremetal {
 
-class LLVM_LIBRARY_VISIBILITY StaticLibTool : public Tool {
+class LLVM_LIBRARY_VISIBILITY StaticLibTool final : public Tool {
 public:
   StaticLibTool(const ToolChain &TC)
       : Tool("baremetal::StaticLibTool", "llvm-ar", TC) {}

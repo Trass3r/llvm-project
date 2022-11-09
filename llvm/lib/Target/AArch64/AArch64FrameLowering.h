@@ -19,7 +19,7 @@
 
 namespace llvm {
 
-class AArch64FrameLowering : public TargetFrameLowering {
+class AArch64FrameLowering final : public TargetFrameLowering {
 public:
   explicit AArch64FrameLowering()
       : TargetFrameLowering(StackGrowsDown, Align(16), 0, Align(16),
