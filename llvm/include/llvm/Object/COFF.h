@@ -832,7 +832,7 @@ struct debug_h_header {
   support::ulittle16_t HashAlgorithm;
 };
 
-class COFFObjectFile : public ObjectFile {
+class COFFObjectFile final : public ObjectFile {
 private:
   COFFObjectFile(MemoryBufferRef Object);
 

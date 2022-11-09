@@ -1259,7 +1259,7 @@ getParameterComment(const ASTContext &Ctx,
 
 /// A simple code-completion consumer that prints the results it
 /// receives in a simple format.
-class PrintingCodeCompleteConsumer : public CodeCompleteConsumer {
+class PrintingCodeCompleteConsumer final : public CodeCompleteConsumer {
   /// The raw output stream.
   raw_ostream &OS;
 

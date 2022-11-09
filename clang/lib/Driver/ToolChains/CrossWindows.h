@@ -49,7 +49,7 @@ public:
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY CrossWindowsToolChain : public Generic_GCC {
+class LLVM_LIBRARY_VISIBILITY CrossWindowsToolChain final : public Generic_GCC {
 public:
   CrossWindowsToolChain(const Driver &D, const llvm::Triple &T,
                         const llvm::opt::ArgList &Args);

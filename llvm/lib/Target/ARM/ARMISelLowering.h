@@ -394,7 +394,7 @@ class VectorType;
   //===--------------------------------------------------------------------===//
   //  ARMTargetLowering - ARM Implementation of the TargetLowering interface
 
-  class ARMTargetLowering : public TargetLowering {
+  class ARMTargetLowering final : public TargetLowering {
   public:
     explicit ARMTargetLowering(const TargetMachine &TM,
                                const ARMSubtarget &STI);

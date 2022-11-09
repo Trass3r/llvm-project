@@ -25,7 +25,7 @@ class X86InstrInfo;
 class X86Subtarget;
 class X86RegisterInfo;
 
-class X86FrameLowering : public TargetFrameLowering {
+class X86FrameLowering final : public TargetFrameLowering {
 public:
   X86FrameLowering(const X86Subtarget &STI, MaybeAlign StackAlignOverride);
 
