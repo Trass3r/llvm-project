@@ -622,7 +622,7 @@ public:
   virtual std::string toString(unsigned Indent) const = 0;
 };
 
-class InMemoryFile : public InMemoryNode {
+class InMemoryFile final : public InMemoryNode {
   Status Stat;
   std::unique_ptr<llvm::MemoryBuffer> Buffer;
 
@@ -724,7 +724,7 @@ public:
 };
 } // namespace
 
-class InMemoryDirectory : public InMemoryNode {
+class InMemoryDirectory final : public InMemoryNode {
   Status Stat;
   std::map<std::string, std::unique_ptr<InMemoryNode>> Entries;
 
@@ -1064,7 +1064,7 @@ InMemoryFileSystem::openFileForRead(const Twine &Path) {
 }
 
 /// Adaptor from InMemoryDir::iterator to directory_iterator.
-class InMemoryFileSystem::DirIterator : public llvm::vfs::detail::DirIterImpl {
+class InMemoryFileSystem::DirIterator final : public llvm::vfs::detail::DirIterImpl {
   const InMemoryFileSystem *FS;
   detail::InMemoryDirectory::const_iterator I;
   detail::InMemoryDirectory::const_iterator E;
@@ -1229,7 +1229,7 @@ RedirectingFileSystem::RedirectingFileSystem(IntrusiveRefCntPtr<FileSystem> FS)
 
 /// Directory iterator implementation for \c RedirectingFileSystem's
 /// directory entries.
-class llvm::vfs::RedirectingFSDirIterImpl
+class llvm::vfs::RedirectingFSDirIterImpl final
     : public llvm::vfs::detail::DirIterImpl {
   std::string Dir;
   RedirectingFileSystem::DirectoryEntry::iterator Current, End;

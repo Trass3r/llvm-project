@@ -1098,7 +1098,7 @@ private:
   const PointerType *ThisPointerTy;
 };
 
-class FieldRegion : public DeclRegion {
+class FieldRegion final : public DeclRegion {
   friend class MemRegionManager;
 
   const FieldDecl *FD;

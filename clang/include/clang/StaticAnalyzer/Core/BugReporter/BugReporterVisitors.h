@@ -170,7 +170,7 @@ class StoreHandler;
 /// Tracker aimes at providing a sensible set of default behaviors that can be
 /// used by any checker, while providing mechanisms to hook into any part of the
 /// tracking process and insert checker-specific logic.
-class Tracker : public llvm::RefCountedBase<Tracker> {
+class Tracker final : public llvm::RefCountedBase<Tracker> {
 private:
   using ExpressionHandlerPtr = std::unique_ptr<ExpressionHandler>;
   using StoreHandlerPtr = std::unique_ptr<StoreHandler>;

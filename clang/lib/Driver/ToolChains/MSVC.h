@@ -42,7 +42,7 @@ public:
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY MSVCToolChain : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY MSVCToolChain final : public ToolChain {
 public:
   MSVCToolChain(const Driver &D, const llvm::Triple &Triple,
                 const llvm::opt::ArgList &Args);

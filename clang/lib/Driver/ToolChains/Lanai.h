@@ -16,7 +16,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY LanaiToolChain : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY LanaiToolChain final : public Generic_ELF {
 public:
   LanaiToolChain(const Driver &D, const llvm::Triple &Triple,
                  const llvm::opt::ArgList &Args)

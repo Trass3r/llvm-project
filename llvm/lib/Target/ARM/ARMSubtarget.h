@@ -45,7 +45,7 @@ class ARMBaseTargetMachine;
 class GlobalValue;
 class StringRef;
 
-class ARMSubtarget : public ARMGenSubtargetInfo {
+class ARMSubtarget final : public ARMGenSubtargetInfo {
 protected:
   enum ARMProcFamilyEnum {
     Others,
