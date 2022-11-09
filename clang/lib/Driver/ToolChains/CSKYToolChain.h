@@ -16,7 +16,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY CSKYToolChain : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY CSKYToolChain final : public Generic_ELF {
 public:
   CSKYToolChain(const Driver &D, const llvm::Triple &Triple,
                 const llvm::opt::ArgList &Args);
@@ -44,7 +44,7 @@ private:
 
 namespace tools {
 namespace CSKY {
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("CSKY::Linker", "ld", TC) {}
   bool hasIntegratedCPP() const override { return false; }

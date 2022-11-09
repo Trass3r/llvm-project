@@ -2763,7 +2763,7 @@ public:
 ///   operator bool();
 /// };
 /// \endcode
-class CXXConversionDecl : public CXXMethodDecl {
+class CXXConversionDecl final : public CXXMethodDecl {
   CXXConversionDecl(ASTContext &C, CXXRecordDecl *RD, SourceLocation StartLoc,
                     const DeclarationNameInfo &NameInfo, QualType T,
                     TypeSourceInfo *TInfo, bool UsesFPIntrin, bool isInline,
@@ -3956,7 +3956,7 @@ public:
 };
 
 /// Represents a C++11 static_assert declaration.
-class StaticAssertDecl : public Decl {
+class StaticAssertDecl final : public Decl {
   llvm::PointerIntPair<Expr *, 1, bool> AssertExprAndFailed;
   StringLiteral *Message;
   SourceLocation RParenLoc;

@@ -50,7 +50,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("GNU::Linker", "linker", TC) {}
 
@@ -63,7 +63,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY StaticLibTool : public Tool {
+class LLVM_LIBRARY_VISIBILITY StaticLibTool final : public Tool {
 public:
   StaticLibTool(const ToolChain &TC)
       : Tool("GNU::StaticLibTool", "static-lib-linker", TC) {}
@@ -100,7 +100,7 @@ public:
                                    llvm::opt::ArgStringList &CmdArgs) const = 0;
 };
 
-class LLVM_LIBRARY_VISIBILITY Preprocessor : public Common {
+class LLVM_LIBRARY_VISIBILITY Preprocessor final : public Common {
 public:
   Preprocessor(const ToolChain &TC)
       : Common("gcc::Preprocessor", "gcc preprocessor", TC) {}
@@ -112,7 +112,7 @@ public:
                            llvm::opt::ArgStringList &CmdArgs) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Compiler : public Common {
+class LLVM_LIBRARY_VISIBILITY Compiler final : public Common {
 public:
   Compiler(const ToolChain &TC) : Common("gcc::Compiler", "gcc frontend", TC) {}
 
@@ -123,7 +123,7 @@ public:
                            llvm::opt::ArgStringList &CmdArgs) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Common {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Common {
 public:
   Linker(const ToolChain &TC) : Common("gcc::Linker", "linker (via gcc)", TC) {}
 

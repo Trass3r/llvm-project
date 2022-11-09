@@ -93,7 +93,7 @@ public:
 /// allowing hierarchical pragmas to be defined.  Common examples of namespaces
 /// are "\#pragma GCC", "\#pragma STDC", and "\#pragma omp", but any namespaces
 /// may be (potentially recursively) defined.
-class PragmaNamespace : public PragmaHandler {
+class PragmaNamespace final : public PragmaHandler {
   /// Handlers - This is a map of the handlers in this namespace with their name
   /// as key.
   llvm::StringMap<std::unique_ptr<PragmaHandler>> Handlers;

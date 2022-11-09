@@ -85,7 +85,7 @@ namespace tools {
 namespace NVPTX {
 
 // Run ptxas, the NVPTX assembler.
-class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
+class LLVM_LIBRARY_VISIBILITY Assembler final : public Tool {
  public:
    Assembler(const ToolChain &TC) : Tool("NVPTX::Assembler", "ptxas", TC) {}
 
@@ -99,7 +99,7 @@ class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
 
 // Runs fatbinary, which combines GPU object files ("cubin" files) and/or PTX
 // assembly into a single output file.
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
  public:
    Linker(const ToolChain &TC) : Tool("NVPTX::Linker", "fatbinary", TC) {}
 
@@ -120,7 +120,7 @@ void getNVPTXTargetFeatures(const Driver &D, const llvm::Triple &Triple,
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY CudaToolChain : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY CudaToolChain final : public ToolChain {
 public:
   CudaToolChain(const Driver &D, const llvm::Triple &Triple,
                 const ToolChain &HostTC, const llvm::opt::ArgList &Args);

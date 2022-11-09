@@ -64,7 +64,7 @@ public:
   bool isSuppressOnSink() const { return SuppressOnSink; }
 };
 
-class BuiltinBug : public BugType {
+class BuiltinBug final : public BugType {
   const std::string desc;
   void anchor() override;
 public:

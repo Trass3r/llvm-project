@@ -364,7 +364,7 @@ std::unique_ptr<FileSystem> createPhysicalFileSystem();
 /// top-most (most recently added) directory are used.  When there is a file
 /// that exists in more than one file system, the file in the top-most file
 /// system overrides the other(s).
-class OverlayFileSystem : public FileSystem {
+class OverlayFileSystem final : public FileSystem {
   using FileSystemList = SmallVector<IntrusiveRefCntPtr<FileSystem>, 1>;
 
   /// The stack of file systems, implemented as a list in order of
@@ -726,7 +726,7 @@ class RedirectingFileSystemParser;
 /// FIXME: 'use-external-name' causes behaviour that's inconsistent with how
 /// "real" filesystems behave. Maybe there should be a separate channel for
 /// this information.
-class RedirectingFileSystem : public vfs::FileSystem {
+class RedirectingFileSystem final : public vfs::FileSystem {
 public:
   enum EntryKind { EK_Directory, EK_DirectoryRemap, EK_File };
   enum NameKind { NK_NotSet, NK_External, NK_Virtual };
@@ -759,7 +759,7 @@ public:
   };
 
   /// A directory in the vfs with explicitly specified contents.
-  class DirectoryEntry : public Entry {
+  class DirectoryEntry final : public Entry {
     std::vector<std::unique_ptr<Entry>> Contents;
     Status S;
 
@@ -828,7 +828,7 @@ public:
 
   /// A directory in the vfs that maps to a directory in the external file
   /// system.
-  class DirectoryRemapEntry : public RemapEntry {
+  class DirectoryRemapEntry final : public RemapEntry {
   public:
     DirectoryRemapEntry(StringRef Name, StringRef ExternalContentsPath,
                         NameKind UseName)
@@ -840,7 +840,7 @@ public:
   };
 
   /// A file in the vfs that maps to a file in the external file system.
-  class FileEntry : public RemapEntry {
+  class FileEntry final : public RemapEntry {
   public:
     FileEntry(StringRef Name, StringRef ExternalContentsPath, NameKind UseName)
         : RemapEntry(EK_File, Name, ExternalContentsPath, UseName) {}

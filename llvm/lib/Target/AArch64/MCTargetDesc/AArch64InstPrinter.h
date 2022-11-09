@@ -230,7 +230,7 @@ protected:
                        const MCSubtargetInfo &STI, raw_ostream &O);
 };
 
-class AArch64AppleInstPrinter : public AArch64InstPrinter {
+class AArch64AppleInstPrinter final : public AArch64InstPrinter {
 public:
   AArch64AppleInstPrinter(const MCAsmInfo &MAI, const MCInstrInfo &MII,
                           const MCRegisterInfo &MRI);

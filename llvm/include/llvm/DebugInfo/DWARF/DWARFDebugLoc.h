@@ -146,7 +146,7 @@ private:
   uint16_t Version;
 };
 
-class ResolverError : public ErrorInfo<ResolverError> {
+class ResolverError final : public ErrorInfo<ResolverError> {
 public:
   static char ID;
 

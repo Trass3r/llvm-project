@@ -25,7 +25,7 @@ void constructTranslateCommand(Compilation &C, const Tool &T,
                                const InputInfo &Input,
                                const llvm::opt::ArgStringList &Args);
 
-class LLVM_LIBRARY_VISIBILITY Translator : public Tool {
+class LLVM_LIBRARY_VISIBILITY Translator final : public Tool {
 public:
   Translator(const ToolChain &TC)
       : Tool("SPIR-V::Translator", "llvm-spirv", TC) {}
@@ -39,7 +39,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("SPIRV::Linker", "spirv-link", TC) {}
   bool hasIntegratedCPP() const override { return false; }

@@ -44,7 +44,7 @@ class DWARFUnitIndex;
 /// DWARFContext
 /// This data structure is the top level entity that deals with dwarf debug
 /// information parsing. The actual data is supplied through DWARFObj.
-class DWARFContext : public DIContext {
+class DWARFContext final : public DIContext {
   DWARFUnitVector NormalUnits;
   Optional<DenseMap<uint64_t, DWARFTypeUnit*>> NormalTypeUnits;
   std::unique_ptr<DWARFUnitIndex> CUIndex;

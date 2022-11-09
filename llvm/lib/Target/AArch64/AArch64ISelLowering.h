@@ -494,7 +494,7 @@ const unsigned RoundingBitsPos = 22;
 
 class AArch64Subtarget;
 
-class AArch64TargetLowering : public TargetLowering {
+class AArch64TargetLowering final : public TargetLowering {
 public:
   explicit AArch64TargetLowering(const TargetMachine &TM,
                                  const AArch64Subtarget &STI);

@@ -183,7 +183,7 @@ public:
 
 /// 'list<Ty>' - Represent a list of element values, all of which must be of
 /// the specified type. The type is stored in ElementTy.
-class ListRecTy : public RecTy {
+class ListRecTy final : public RecTy {
   friend ListRecTy *RecTy::getListTy();
 
   RecTy *ElementTy;
@@ -575,7 +575,7 @@ public:
 };
 
 /// '7' - Represent an initialization by a literal integer value.
-class IntInit : public TypedInit {
+class IntInit final : public TypedInit {
   int64_t Value;
 
   explicit IntInit(RecordKeeper &RK, int64_t V)
@@ -605,7 +605,7 @@ public:
 };
 
 /// "anonymous_n" - Represent an anonymous record name
-class AnonymousNameInit : public TypedInit {
+class AnonymousNameInit final : public TypedInit {
   unsigned Value;
 
   explicit AnonymousNameInit(RecordKeeper &RK, unsigned V)
@@ -635,7 +635,7 @@ public:
 };
 
 /// "foo" - Represent an initialization by a string value.
-class StringInit : public TypedInit {
+class StringInit final : public TypedInit {
 public:
   enum StringFormat {
     SF_String, // Format as "text"
@@ -782,7 +782,7 @@ public:
 
 /// !op (X) - Transform an init.
 ///
-class UnOpInit : public OpInit, public FoldingSetNode {
+class UnOpInit final : public OpInit, public FoldingSetNode {
 public:
   enum UnaryOp : uint8_t { CAST, NOT, HEAD, TAIL, SIZE, EMPTY, GETDAGOP, LOG2 };
 
@@ -1152,7 +1152,7 @@ public:
 };
 
 /// 'Opcode' - Represent a reference to an entire variable object.
-class VarInit : public TypedInit {
+class VarInit final : public TypedInit {
   Init *VarName;
 
   explicit VarInit(Init *VN, RecTy *T)
@@ -1259,7 +1259,7 @@ public:
 };
 
 /// AL - Represent a reference to a 'def' in the description
-class DefInit : public TypedInit {
+class DefInit final : public TypedInit {
   friend class Record;
 
   Record *Def;

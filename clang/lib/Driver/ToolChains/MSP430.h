@@ -25,7 +25,7 @@ namespace clang {
 namespace driver {
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY MSP430ToolChain : public Generic_ELF {
+class LLVM_LIBRARY_VISIBILITY MSP430ToolChain final : public Generic_ELF {
 public:
   MSP430ToolChain(const Driver &D, const llvm::Triple &Triple,
                   const llvm::opt::ArgList &Args);
@@ -59,7 +59,7 @@ private:
 namespace tools {
 namespace msp430 {
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("MSP430::Linker", "msp430-elf-ld", TC) {}
   bool hasIntegratedCPP() const override { return false; }

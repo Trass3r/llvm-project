@@ -448,7 +448,7 @@ private:
 
 /// CheckOpcodeMatcher - This checks to see if the current node has the
 /// specified opcode, if not it fails to match.
-class CheckOpcodeMatcher : public Matcher {
+class CheckOpcodeMatcher final : public Matcher {
   const SDNodeInfo &Opcode;
 public:
   CheckOpcodeMatcher(const SDNodeInfo &opcode)
@@ -494,7 +494,7 @@ private:
 
 /// CheckTypeMatcher - This checks to see if the current node has the
 /// specified type at the specified result, if not it fails to match.
-class CheckTypeMatcher : public Matcher {
+class CheckTypeMatcher final : public Matcher {
   MVT::SimpleValueType Type;
   unsigned ResNo;
 public:

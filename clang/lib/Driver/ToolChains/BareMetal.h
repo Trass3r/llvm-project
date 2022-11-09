@@ -19,7 +19,7 @@ namespace driver {
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY BareMetal : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY BareMetal final : public ToolChain {
 public:
   BareMetal(const Driver &D, const llvm::Triple &Triple,
             const llvm::opt::ArgList &Args);
@@ -77,7 +77,7 @@ public:
 namespace tools {
 namespace baremetal {
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("baremetal::Linker", "ld.lld", TC) {}
   bool isLinkJob() const override { return true; }

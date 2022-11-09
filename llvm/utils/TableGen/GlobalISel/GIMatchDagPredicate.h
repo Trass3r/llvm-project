@@ -80,7 +80,7 @@ public:
 #endif // if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 };
 
-class GIMatchDagOpcodePredicate : public GIMatchDagPredicate {
+class GIMatchDagOpcodePredicate final : public GIMatchDagPredicate {
   const CodeGenInstruction &Instr;
 
 public:
@@ -100,7 +100,7 @@ public:
 #endif // if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 };
 
-class GIMatchDagOneOfOpcodesPredicate : public GIMatchDagPredicate {
+class GIMatchDagOneOfOpcodesPredicate final : public GIMatchDagPredicate {
   SmallVector<const CodeGenInstruction *, 4> Instrs;
 
 public:
@@ -123,7 +123,7 @@ public:
 #endif // if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 };
 
-class GIMatchDagSameMOPredicate : public GIMatchDagPredicate {
+class GIMatchDagSameMOPredicate final : public GIMatchDagPredicate {
 public:
   GIMatchDagSameMOPredicate(GIMatchDagContext &Ctx, StringRef Name);
 

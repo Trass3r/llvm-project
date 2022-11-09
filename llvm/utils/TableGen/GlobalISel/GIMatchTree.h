@@ -553,7 +553,7 @@ public:
 ///   result is that the cases that don't match the superset will match the
 ///   subset rule, while the ones that do match the superset will match either
 ///   (which one is algorithm dependent but will usually be the superset).
-class GIMatchTreeOpcodePartitioner : public GIMatchTreePartitioner {
+class GIMatchTreeOpcodePartitioner final : public GIMatchTreePartitioner {
   unsigned InstrID;
   DenseMap<const CodeGenInstruction *, unsigned> InstrToPartition;
   std::vector<const CodeGenInstruction *> PartitionToInstr;
@@ -582,7 +582,7 @@ public:
                                      StringRef Indent) const override;
 };
 
-class GIMatchTreeVRegDefPartitioner : public GIMatchTreePartitioner {
+class GIMatchTreeVRegDefPartitioner final : public GIMatchTreePartitioner {
   unsigned NewInstrID = -1;
   unsigned InstrID;
   unsigned OpIdx;
