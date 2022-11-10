@@ -1,0 +1,126 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**/CI.yml'
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        show-progress: false
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: cpp
+        queries: +security-extended
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: codeql
+        max-size: 1G
+        verbose: 2
+    - env:
+        CC: clang
+        CXX: clang++
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_SLOPPINESS: pch_defines,time_macros
+      run: |
+        set -eux
+        sudo apt autoremove -qq firefox* snap* powershell* gcc-12
+        #sudo sed -i s/noble/oracular/ /etc/apt/sources.list
+        sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache
+        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-Og -g0' \
+          -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DCLANG_INCLUDE_TESTS=OFF \
+          -DLLVM_ENABLE_PROJECTS="" -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        # CodeChecker chokes on asm entries
+        sed -i 's/\.S/.c/g' compile_commands.json
+        # build all .inc without order-only deps
+        sed -ri 's/(build .+?\.inc: .+?) \|\| .+/\1/g' build.ninja
+        ninja -k0 $(ninja -t targets | grep '.inc:' | grep -v Introspection.inc | sed 's/:.*//')
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+        ccache -x
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:cpp"
+    - run: |
+        echo '{"analyze": ["--verbose=debug"]}' > codechecker.json
+    - uses: whisperity/codechecker-analysis-action@v1
+      env:
+        CODECHECKER_ACTION_DEBUG: 1
+      id: codechecker
+      with:
+        config: 'codechecker.json'
+        logfile: ${{ github.workspace }}/compile_commands.json
+    - uses: actions/upload-artifact@v4
+      with:
+        name: "CodeChecker Bug Reports"
+        path: ${{ steps.codechecker.outputs.result-html-dir }}
+
+  CSA:
+    name: CSA
+    runs-on: ubuntu-24.04
+    #container: ubuntu:devel
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+    #- run: apt update && apt install -y sudo git
+    - uses: actions/checkout@v4
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: csa
+        max-size: 1G
+        verbose: 1
+    - run: |
+        set -eux
+        export CCACHE_NOCOMPRESS=1 # cache action will also compress
+        export CCACHE_SLOPPINESS=pch_defines,time_macros
+        #sudo sed -i s/noble/oracular/ /etc/apt/sources.list
+        sudo apt update
+        sudo apt -qq install -y g++ binutils-dev cmake ninja-build clang clang-tools lld python3 ccache
+        #export CCC_CC=clang CCC_CXX=clang++ CCC_ANALYZER_OUTPUT_FORMAT=sarif-html # there's also CLANG/CLANG_CXX for the analyzer
+        export CC=clang CXX=clang++
+        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DCMAKE_INSTALL_PREFIX=install \
+          -DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DCLANG_INCLUDE_TESTS=OFF \
+          -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        #timeout 5.8h scan-build -v ninja -k0 clang
+
+        sed -ri 's/(build .+?\.inc.+?) \|\| .+/\1/g' build.ninja
+        ninja -k0 $(ninja -t targets | egrep '_gen:|TableGen:' | sed 's/:.*//')
+        analyze-build-18 -v --sarif-html -o csa
+        mv csa/*/results-merged.sarif merged.sarif
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+      continue-on-error: true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: CSA
+        path: csa
+    - run: |
+        rm merged.sarif
+        sudo apt-get -qqq install npm
+        export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+        npx -y @microsoft/sarif-multitool merge 'csa/*/*.sarif'
+        ls -lA
+    - uses: actions/upload-artifact@v4
+      with:
+        name: merged
+        path: merged.sarif
+    - uses: github/codeql-action/upload-sarif@main
+      with:
+        sarif_file: merged.sarif
+        category: csa
