@@ -56,7 +56,7 @@ else()
       COMMENT Generate ASTNodeAPI.json
       OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ASTNodeAPI.json
       DEPENDS clang-ast-dump clang-resource-headers
-      COMMAND
+      COMMAND gdb --batch -ex r -ex bt -ex q --args
       $<TARGET_FILE:clang-ast-dump>
         # Skip this in debug mode because parsing AST.h is too slow
         --skip-processing=${skip_expensive_processing}
