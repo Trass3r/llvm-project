@@ -1,0 +1,107 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**/CI.yml'
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+        queries: +security-extended
+    - uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: codeql
+        max-size: 0.75G
+        verbose: 1
+    - env:
+        CC: clang
+        CXX: clang++
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_SLOPPINESS: pch_defines,time_macros
+      run: |
+        sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache
+        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-Og -g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        # CodeChecker chokes on asm entries
+        sed -i 's/\.S/.c/g' compile_commands.json
+        # build all .inc without order-only deps
+        sed -ri 's/(build .+?\.inc: .+?) \|\| .+/\1/g' build.ninja
+        ninja -k0 $(ninja -t targets | grep '.inc:' | grep -v Introspection.inc | sed 's/:.*//')
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+        ccache -x
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:cpp"
+    - run: |
+        echo '{"analyze": ["--verbose=debug"]}' > codechecker.json
+    - uses: whisperity/codechecker-analysis-action@v1
+      env:
+        CODECHECKER_ACTION_DEBUG: 1
+      id: codechecker
+      with:
+        config: 'codechecker.json'
+        logfile: ${{ github.workspace }}/compile_commands.json
+    - uses: actions/upload-artifact@v3
+      with:
+        name: "CodeChecker Bug Reports"
+        path: ${{ steps.codechecker.outputs.result-html-dir }}
+
+  CSA:
+    name: CSA
+    runs-on: ubuntu-22.04
+    container: ubuntu:rolling
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - uses: actions/checkout@v3
+    - run: apt update && apt install -y sudo git
+    - uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: csa
+        max-size: 1G
+        verbose: 1
+    - env:
+        CCC_CC: clang
+        CCC_CXX: clang++
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_SLOPPINESS: pch_defines,time_macros
+      run: |
+        sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang clang-tools lld python3 ccache
+        scan-build cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        scan-build -sarif -o csa ninja -k0 lld
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+        ccache -x
+        ls -la
+      continue-on-error: true
+    - uses: actions/upload-artifact@v3
+      with:
+        name: CSA
+        path: csa
+    - run: |
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y npm
+        npx -y @microsoft/sarif-multitool merge csa/*/*.sarif
+    - uses: github/codeql-action/upload-sarif@main
+      with:
+        sarif_file: merged.sarif
+        category: csa
