@@ -31,9 +31,6 @@ if(CXX_SUPPORTS_COVERED_SWITCH_DEFAULT_FLAG)
   add_definitions("-Wno-covered-switch-default")
 endif()
 
-set(LLVM_REQUIRES_RTTI 1)
-add_definitions( -DGTEST_HAS_RTTI=0 )
-
 if (HAVE_LIBPTHREAD)
   list(APPEND LIBS pthread)
 endif()
@@ -59,6 +56,8 @@ if(CXX_SUPPORTS_SUGGEST_OVERRIDE_FLAG)
   add_definitions("-Wno-suggest-override")
   set_target_properties(llvm_gtest PROPERTIES INTERFACE_COMPILE_OPTIONS "-Wno-suggest-override")
 endif()
+
+target_compile_definitions(llvm_gtest PUBLIC GTEST_HAS_RTTI=0)
 
 if (NOT LLVM_ENABLE_THREADS)
   target_compile_definitions(llvm_gtest PUBLIC GTEST_HAS_PTHREAD=0)
