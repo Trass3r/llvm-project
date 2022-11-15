@@ -190,10 +190,8 @@ public:
       if (!LHS || !RHS)
         return nullptr;
 
-      llvm::APSInt ConvertedLHS, ConvertedRHS;
-      QualType LTy, RTy;
-      std::tie(ConvertedLHS, LTy) = SMTConv::fixAPSInt(Ctx, *LHS);
-      std::tie(ConvertedRHS, RTy) = SMTConv::fixAPSInt(Ctx, *RHS);
+      auto [ConvertedLHS, LTy] = SMTConv::fixAPSInt(Ctx, *LHS);
+      auto [ConvertedRHS, RTy] = SMTConv::fixAPSInt(Ctx, *RHS);
       SMTConv::doIntTypeConversion<llvm::APSInt, &SMTConv::castAPSInt>(
           Solver, Ctx, ConvertedLHS, LTy, ConvertedRHS, RTy);
       std::optional<APSIntPtr> Res =

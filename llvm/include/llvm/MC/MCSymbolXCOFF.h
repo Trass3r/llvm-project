@@ -31,8 +31,7 @@ public:
 
   static StringRef getUnqualifiedName(StringRef Name) {
     if (Name.back() == ']') {
-      StringRef Lhs, Rhs;
-      std::tie(Lhs, Rhs) = Name.rsplit('[');
+      auto [Lhs, Rhs] = Name.rsplit('[');
       assert(!Rhs.empty() && "Invalid SMC format in XCOFF symbol.");
       return Lhs;
     }
