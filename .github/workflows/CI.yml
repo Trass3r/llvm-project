@@ -107,7 +107,7 @@ jobs:
         name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         path: |
           build/ccache.log
-          build/**/*.ccache-log
+          build/**/*.ccache-*
     - name: separate debug info
       if: ${{ !contains(matrix.cmake_args, 'gsplit-dwarf') }}
       run: |
