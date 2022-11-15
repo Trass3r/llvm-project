@@ -71,8 +71,8 @@ jobs:
         CCACHE_BASEDIR: ${{ github.workspace }}/build
         CCACHE_NOCOMPRESS: 1 # cache action will also compress
         CCACHE_SLOPPINESS: pch_defines,time_macros
-        #CCACHE_DEBUG: 1
-        #CCACHE_LOGFILE: /tmp/ccache.log
+        CCACHE_DEBUG: 1
+        CCACHE_LOGFILE: ccache.log
       run: |
         mkdir -p build && cd build
         # -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON does not work with -DBUILD_SHARED_LIBS=ON
@@ -98,11 +98,16 @@ jobs:
         ccache -x
         ninja clean || true # save space
     - name: process ccache logs
-      if: false
+      if: true
       run: |
         cd build
         find -name '*.ccache-log' | xargs egrep '[^W]miss|supported|found'
-        cat ./tools/clang/lib/StaticAnalyzer/Frontend/CMakeFiles/obj.clangStaticAnalyzerFrontend.dir/FrontendActions.cpp.o.ccache-log
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: |
+          build/ccache.log
+          build/**/*.ccache-log
     - name: separate debug info
       if: ${{ !contains(matrix.cmake_args, 'gsplit-dwarf') }}
       run: |
