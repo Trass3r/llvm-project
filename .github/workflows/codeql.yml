@@ -99,6 +99,7 @@ jobs:
         name: CSA
         path: csa
     - run: |
+        sudo apt install -y npm
         export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
         npx -y @microsoft/sarif-multitool merge csa/*/*.sarif
     - uses: github/codeql-action/upload-sarif@main
