@@ -179,9 +179,7 @@ private:
 
 public:
   static void format(const Dur &D, llvm::raw_ostream &Stream, StringRef Style) {
-    InternalRep count;
-    StringRef unit;
-    std::tie(count, unit) = consumeUnit(Style, D);
+    auto [count, unit] = consumeUnit(Style, D);
     bool show_unit = consumeShowUnit(Style);
 
     format_provider<InternalRep>::format(count, Stream, Style);

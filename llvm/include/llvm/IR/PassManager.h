@@ -350,13 +350,12 @@ public:
       // that. Note that we cannot reuse IMapI and must do a fresh insert here,
       // as calling invalidate could (recursively) insert things into the map,
       // making any iterator or reference invalid.
-      bool Inserted;
-      std::tie(IMapI, Inserted) =
+      auto [IMapI2, Inserted] =
           IsResultInvalidated.insert({ID, Result.invalidate(IR, PA, *this)});
       (void)Inserted;
       assert(Inserted && "Should not have already inserted this ID, likely "
                          "indicates a dependency cycle!");
-      return IMapI->second;
+      return IMapI2->second;
     }
 
     Invalidator(SmallDenseMap<AnalysisKey *, bool, 8> &IsResultInvalidated,

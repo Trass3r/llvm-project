@@ -216,8 +216,7 @@ inline StringRef denormalModeKindName(DenormalMode::DenormalModeKind Mode) {
 
 /// Returns the denormal mode to use for inputs and outputs.
 inline DenormalMode parseDenormalFPAttribute(StringRef Str) {
-  StringRef OutputStr, InputStr;
-  std::tie(OutputStr, InputStr) = Str.split(',');
+  auto [OutputStr, InputStr] = Str.split(',');
 
   DenormalMode Mode;
   Mode.Output = parseDenormalFPAttributeComponent(OutputStr);

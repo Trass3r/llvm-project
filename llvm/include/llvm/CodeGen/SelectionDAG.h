@@ -2278,8 +2278,7 @@ public:
 
   /// Split the vector with EXTRACT_SUBVECTOR and return the low/high part.
   std::pair<SDValue, SDValue> SplitVector(const SDValue &N, const SDLoc &DL) {
-    EVT LoVT, HiVT;
-    std::tie(LoVT, HiVT) = GetSplitDestVTs(N.getValueType());
+    auto [LoVT, HiVT] = GetSplitDestVTs(N.getValueType());
     return SplitVector(N, DL, LoVT, HiVT);
   }
 
