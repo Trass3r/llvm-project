@@ -259,9 +259,7 @@ public:
   // Add an edge to AllEdges with weight W.
   Edge &addEdge(const BasicBlock *Src, const BasicBlock *Dest, uint64_t W) {
     uint32_t Index = BBInfos.size();
-    auto Iter = BBInfos.end();
-    bool Inserted;
-    std::tie(Iter, Inserted) = BBInfos.insert(std::make_pair(Src, nullptr));
+    auto [Iter, Inserted] = BBInfos.insert(std::make_pair(Src, nullptr));
     if (Inserted) {
       // Newly inserted, update the real info.
       Iter->second = std::move(std::make_unique<BBInfo>(Index));
