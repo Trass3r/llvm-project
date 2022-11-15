@@ -40,7 +40,7 @@ jobs:
         sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache
         cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-Og -g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         # CodeChecker chokes on asm entries
-        sed -i 's/\.S/.c/g' compile_commands.json
+        #sed -i 's/\.S/.c/g' compile_commands.json
         # build all .inc without order-only deps
         sed -ri 's/(build .+?\.inc: .+?) \|\| .+/\1/g' build.ninja
         ninja -k0 $(ninja -t targets | grep '.inc:' | grep -v Introspection.inc | sed 's/:.*//')
@@ -88,7 +88,6 @@ jobs:
         CCACHE_SLOPPINESS: pch_defines,time_macros
       run: |
         sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang clang-tools lld python3 ccache
-        sudo DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 apt install -y npm
         scan-build cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         scan-build -sarif -o csa ninja -k0 lld
         find -type f -name '*.o' -exec du -ch {} + | grep total$
@@ -100,7 +99,7 @@ jobs:
         name: CSA
         path: csa
     - run: |
-        sudo DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 apt install -y npm
+        export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
         npx -y @microsoft/sarif-multitool merge csa/*/*.sarif
     - uses: github/codeql-action/upload-sarif@main
       with:
