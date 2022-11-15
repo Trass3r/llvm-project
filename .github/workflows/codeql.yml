@@ -89,7 +89,7 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang clang-tools lld python3 ccache
         scan-build cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        scan-build -sarif -o csa ninja -k0 lld
+        timeout 5.8h scan-build -sarif -o csa ninja -k0 lld
         find -type f -name '*.o' -exec du -ch {} + | grep total$
         ccache -x
         ls -la
