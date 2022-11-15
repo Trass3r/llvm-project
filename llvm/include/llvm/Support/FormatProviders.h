@@ -402,9 +402,7 @@ public:
                 "Range value_type does not have a format provider!");
   static void format(const llvm::iterator_range<IterT> &V,
                      llvm::raw_ostream &Stream, StringRef Style) {
-    StringRef Sep;
-    StringRef ArgStyle;
-    std::tie(Sep, ArgStyle) = parseOptions(Style);
+    auto [Sep, ArgStyle] = parseOptions(Style);
     auto Begin = V.begin();
     auto End = V.end();
     if (Begin != End) {

@@ -270,9 +270,7 @@ AnalysisType &Pass::getAnalysisID(AnalysisID PI, Function &F, bool *Changed) {
   // PI *must* appear in AnalysisImpls.  Because the number of passes used
   // should be a small number, we just do a linear search over a (dense)
   // vector.
-  Pass *ResultPass;
-  bool LocalChanged;
-  std::tie(ResultPass, LocalChanged) = Resolver->findImplPass(this, PI, F);
+  auto [ResultPass, LocalChanged] = Resolver->findImplPass(this, PI, F);
 
   assert(ResultPass && "Unable to find requested analysis info");
   if (Changed)

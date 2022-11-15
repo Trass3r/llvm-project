@@ -69,9 +69,7 @@ public:
   GlobalNumberState() = default;
 
   uint64_t getNumber(GlobalValue* Global) {
-    ValueNumberMap::iterator MapIter;
-    bool Inserted;
-    std::tie(MapIter, Inserted) = GlobalNumbers.insert({Global, NextNumber});
+    auto [MapIter, Inserted] = GlobalNumbers.insert({Global, NextNumber});
     if (Inserted)
       NextNumber++;
     return MapIter->second;
