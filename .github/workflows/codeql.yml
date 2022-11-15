@@ -67,7 +67,7 @@ jobs:
   CSA:
     name: CSA
     runs-on: ubuntu-22.04
-    container: ubuntu:rolling
+    container: ubuntu:devel
     permissions:
       actions: read
       contents: read
