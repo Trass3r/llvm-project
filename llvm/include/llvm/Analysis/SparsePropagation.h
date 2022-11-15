@@ -504,12 +504,8 @@ void SparseSolver<LatticeKey, LatticeVal, KeyInfo>::Print(
   if (ValueState.empty())
     return;
 
-  LatticeKey Key;
-  LatticeVal LV;
-
   OS << "ValueState:\n";
-  for (auto &Entry : ValueState) {
-    std::tie(Key, LV) = Entry;
+  for (auto &&[Key, LV] : ValueState) {
     if (LV == LatticeFunc->getUntrackedVal())
       continue;
     OS << "\t";

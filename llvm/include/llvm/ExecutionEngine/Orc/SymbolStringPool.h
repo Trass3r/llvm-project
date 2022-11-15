@@ -285,9 +285,7 @@ inline SymbolStringPool::~SymbolStringPool() {
 
 inline SymbolStringPtr SymbolStringPool::intern(StringRef S) {
   std::lock_guard<std::mutex> Lock(PoolMutex);
-  PoolMap::iterator I;
-  bool Added;
-  std::tie(I, Added) = Pool.try_emplace(S, 0);
+  auto [I, Added] = Pool.try_emplace(S, 0);
   return SymbolStringPtr(&*I);
 }
 
