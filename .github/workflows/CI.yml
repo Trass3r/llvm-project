@@ -153,7 +153,7 @@ jobs:
               -DCLANGD_ENABLE_REMOTE=OFF \
               -DLLVM_ENABLE_ZLIB=OFF \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
-              -DLLVM_ENABLE_PROJECTS=all -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON ../llvm/
+              -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON ../llvm/
         ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
         ninja -k0 || touch .fail
         find -type f -name '*.o' -exec du -ch {} + | grep total$
