@@ -75,10 +75,18 @@ jobs:
     steps:
     #- run: apt update && apt install -y sudo git
     - uses: actions/checkout@v3
+    - uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: csa
+        max-size: 0.75G
+        verbose: 1
     - run: |
+        export CCACHE_NOCOMPRESS=1 # cache action will also compress
+        export CCACHE_SLOPPINESS=pch_defines,time_macros
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 16
         sudo apt update && sudo apt -qq install -y build-essential g++ binutils-dev cmake ninja-build clang clang-tools-16 lld python3 ccache
         #export CCC_CC=clang CCC_CXX=clang++ CCC_ANALYZER_OUTPUT_FORMAT=sarif-html # there's also CLANG/CLANG_CXX for the analyzer
+        export CC=clang CXX=clang++
         cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DCMAKE_INSTALL_PREFIX=install -DLLVM_ENABLE_PROJECTS="" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         #timeout 5.8h scan-build-16 -v ninja -k0 clang
 
