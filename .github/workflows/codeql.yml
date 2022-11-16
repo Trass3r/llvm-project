@@ -38,7 +38,7 @@ jobs:
         CCACHE_SLOPPINESS: pch_defines,time_macros
       run: |
         sudo apt update && sudo apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache
-        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-Og -g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-Og -g0' -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
         # CodeChecker chokes on asm entries
         #sed -i 's/\.S/.c/g' compile_commands.json
         # build all .inc without order-only deps
@@ -78,9 +78,14 @@ jobs:
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 16
         sudo apt update && sudo apt -qq install -y build-essential g++ binutils-dev cmake ninja-build clang clang-tools-16 lld python3 ccache
-        export CCC_CC=clang CCC_CXX=clang++ CCC_ANALYZER_OUTPUT_FORMAT=sarif-html # there's also CLANG/CLANG_CXX for the analyzer
-        scan-build-16 -v cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        timeout 5.8h scan-build-16 -v ninja -k0 clang
+        #export CCC_CC=clang CCC_CXX=clang++ CCC_ANALYZER_OUTPUT_FORMAT=sarif-html # there's also CLANG/CLANG_CXX for the analyzer
+        cmake llvm -GNinja -DLLVM_CCACHE_BUILD=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG='-g0' -DCMAKE_INSTALL_PREFIX=install -DLLVM_ENABLE_PROJECTS="" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        #timeout 5.8h scan-build-16 -v ninja -k0 clang
+
+        sed -ri 's/(build .+?\.inc.+?) \|\| .+/\1/g' build.ninja
+        ninja -k0 $(ninja -t targets | egrep '_gen:|TableGen:' | sed 's/:.*//')
+        analyze-build-16 -v --sarif-html -o csa
+
         find -type f -name '*.o' -exec du -ch {} + | grep total$
       continue-on-error: true
     - uses: actions/upload-artifact@v3
