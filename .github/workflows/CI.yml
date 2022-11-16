@@ -126,6 +126,10 @@ jobs:
 
   build-analyzer:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        libcxx: [FALSE, TRUE]
     steps:
     - uses: actions/checkout@v3
     - run: |
@@ -152,6 +156,7 @@ jobs:
               -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=ON -DCLANG_INCLUDE_TESTS=ON -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
               -DCLANGD_ENABLE_REMOTE=OFF \
               -DLLVM_ENABLE_ZLIB=OFF \
+              -DLLVM_ENABLE_LIBCXX=${{ matrix.libcxx }} \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON ../llvm/
         ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
