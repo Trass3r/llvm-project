@@ -134,7 +134,7 @@ jobs:
     - uses: actions/checkout@v3
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 16
-        sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache gdb wine
+        sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld libc++-16-dev libc++abi-16-dev python3 ccache gdb wine
         wget https://github.com/Viladoman/CompileScore/releases/latest/download/CompileScoreExtractor.zip
         unzip CompileScoreExtractor.zip
     - run: |
