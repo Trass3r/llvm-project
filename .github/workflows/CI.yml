@@ -129,12 +129,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        libcxx: [FALSE, TRUE]
+        libcxx: ['', '-DLLVM_ENABLE_LIBCXX=ON']
     steps:
     - uses: actions/checkout@v3
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 16
-        sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld python3 ccache gdb wine
+        sudo apt update && sudo DEBIAN_FRONTEND=noninteractive apt install -y build-essential g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache gdb wine
         wget https://github.com/Viladoman/CompileScore/releases/latest/download/CompileScoreExtractor.zip
         unzip CompileScoreExtractor.zip
     - run: |
@@ -156,7 +156,7 @@ jobs:
               -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=ON -DCLANG_INCLUDE_TESTS=ON -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
               -DCLANGD_ENABLE_REMOTE=OFF \
               -DLLVM_ENABLE_ZLIB=OFF \
-              -DLLVM_ENABLE_LIBCXX=${{ matrix.libcxx }} \
+              ${{ matrix.libcxx }} \
               -DLLVM_ENABLE_MODULES=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_OPTIMIZED_TABLEGEN=ON -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON ../llvm/
