@@ -377,6 +377,13 @@ constexpr uint64_t MinAlign(uint64_t A, uint64_t B) {
   return (A | B) & (1 + ~(A | B));
 }
 
+/// Returns the minimum of 2 values.
+template <typename T>
+constexpr T Min(T A, T B) { return A < B ? A : B; }
+/// Returns the maximum of 2 values.
+template <typename T>
+constexpr T Max(T A, T B) { return A < B ? B : A; }
+
 /// Returns the next power of two (in 64-bits) that is strictly greater than A.
 /// Returns zero on overflow.
 constexpr uint64_t NextPowerOf2(uint64_t A) {
