@@ -114,7 +114,7 @@ void visitDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
   }
 
   // handle inheritance codelens directly
-  CodeLensArgument Sub, Super;
+  CodeLensArgument Sub;
   if (auto *CXXRD = dyn_cast<CXXRecordDecl>(D)) {
     if (!CXXRD->isEffectivelyFinal()) {
       Sub.locations = lookupIndex(Index, Limit, Path, D, RelationKind::BaseOf);
@@ -124,20 +124,6 @@ void visitDecl(ParsedAST &AST, const SymbolIndex *Index, uint32_t Limit,
       Sub.locations =
           lookupIndex(Index, Limit, Path, D, RelationKind::OverriddenBy);
     }
-    for (const auto *P : CXXMD->overridden_methods()) {
-      if (auto Loc = declToLocation(P->getCanonicalDecl()))
-        Super.locations.emplace_back(*Loc);
-    }
-  }
-
-  if (auto Count = Super.locations.size()) {
-    Super.position = Range.start;
-    Super.uri = std::string(Path);
-    Command Cmd;
-    Cmd.command = std::string(CodeAction::SHOW_REFERENCES);
-    Cmd.title = std::to_string(Count) + " base(s)";
-    Cmd.argument = std::move(Super);
-    Results.emplace_back(CodeLens{Range, std::move(Cmd), std::nullopt});
   }
 
   if (auto Count = Sub.locations.size()) {
