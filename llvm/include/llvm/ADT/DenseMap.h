@@ -22,7 +22,6 @@
 #include "llvm/Support/MemAlloc.h"
 #include "llvm/Support/ReverseIteration.h"
 #include "llvm/Support/type_traits.h"
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -865,7 +864,7 @@ public:
     unsigned OldNumBuckets = NumBuckets;
     BucketT *OldBuckets = Buckets;
 
-    allocateBuckets(std::max<unsigned>(64, static_cast<unsigned>(NextPowerOf2(AtLeast-1))));
+    allocateBuckets(llvm::Max(64u, static_cast<unsigned>(NextPowerOf2(AtLeast-1))));
     assert(Buckets);
     if (!OldBuckets) {
       this->BaseT::initEmpty();
@@ -887,7 +886,7 @@ public:
     // Reduce the number of buckets.
     unsigned NewNumBuckets = 0;
     if (OldNumEntries)
-      NewNumBuckets = std::max(64, 1 << (Log2_32_Ceil(OldNumEntries) + 1));
+      NewNumBuckets = llvm::Max(64u, 1u << (Log2_32_Ceil(OldNumEntries) + 1));
     if (NewNumBuckets == NumBuckets) {
       this->BaseT::initEmpty();
       return;
@@ -1104,7 +1103,7 @@ public:
 
   void grow(unsigned AtLeast) {
     if (AtLeast > InlineBuckets)
-      AtLeast = std::max<unsigned>(64, NextPowerOf2(AtLeast-1));
+      AtLeast = llvm::Max<unsigned>(64u, NextPowerOf2(AtLeast-1));
 
     if (Small) {
       // First move the inline buckets into a temporary storage.

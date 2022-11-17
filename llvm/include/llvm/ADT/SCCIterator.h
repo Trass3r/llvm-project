@@ -26,6 +26,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/GraphTraits.h"
 #include "llvm/ADT/iterator.h"
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <iterator>
