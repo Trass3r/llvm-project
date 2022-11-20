@@ -14,27 +14,6 @@
 
 namespace clang {
 namespace clangd {
-std::optional<Location> declToLocation(const Decl *D) {
-  ASTContext &Ctx = D->getASTContext();
-  auto &SM = Ctx.getSourceManager();
-  auto &FM = SM.getFileManager();
-  SourceLocation NameLoc = nameLocation(*D, Ctx.getSourceManager());
-  auto FE = SM.getFileEntryRefForID(SM.getFileID(NameLoc));
-  auto TU = SM.getFileEntryRefForID(SM.getMainFileID());
-  if (!FE || !TU) {
-    return std::nullopt;
-  }
-  auto FilePath = getCanonicalPath(*FE, FM);
-  auto TUPath = getCanonicalPath(*TU, FM);
-  if (!FilePath || !TUPath)
-    return std::nullopt; // Not useful without a uri.
-
-  Position NameBegin = sourceLocToPosition(SM, NameLoc);
-  Position NameEnd = sourceLocToPosition(
-      SM, Lexer::getLocForEndOfToken(NameLoc, 0, SM, Ctx.getLangOpts()));
-  return Location{URIForFile::canonicalize(*FilePath, *TUPath),
-                  {NameBegin, NameEnd}};
-}
 
 std::vector<Location> lookupIndex(const SymbolIndex *Index, uint32_t Limit,
                                   PathRef Path, Decl *D, RelationKind R) {
