@@ -39,6 +39,7 @@ add_unittest(ClangdUnitTests ClangdTests
   ClangdLSPServerTests.cpp
   CodeCompleteTests.cpp
   CodeCompletionStringsTests.cpp
+  CodelensTests.cpp
   CollectMacrosTests.cpp
   CompileCommandsTests.cpp
   CompilerTests.cpp
