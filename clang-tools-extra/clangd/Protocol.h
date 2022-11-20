@@ -1053,6 +1053,11 @@ bool fromJSON(const llvm::json::Value &, ExecuteCommandParams &,
 
 struct Command : public ExecuteCommandParams {
   std::string title;
+
+  friend bool operator==(const Command &LHS, const Command &RHS) {
+    return LHS.title == RHS.title && LHS.command == RHS.command /*&&
+           LHS.argument == RHS.argument*/; // FIXME
+  }
 };
 llvm::json::Value toJSON(const Command &C);
 
@@ -2026,6 +2031,10 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &, const ASTNode &);
 /// https://microsoft.github.io/language-server-protocol/specification#textDocument_codeLens
 struct CodeLensResolveData {
   std::string uri;
+
+  friend bool operator==(const CodeLensResolveData &LHS, const CodeLensResolveData &RHS) {
+    return LHS.uri == RHS.uri;
+  }
 };
 bool fromJSON(const llvm::json::Value &, CodeLensResolveData &,
               llvm::json::Path);
@@ -2047,6 +2056,11 @@ struct CodeLens {
   std::optional<Command> command;
   // CodeLens resolve data.
   std::optional<CodeLensResolveData> data;
+
+  friend bool operator==(const CodeLens &LHS, const CodeLens &RHS) {
+    return LHS.range == RHS.range && LHS.command == RHS.command &&
+           LHS.data == RHS.data;
+  }
 };
 bool fromJSON(const llvm::json::Value &, CodeLens &, llvm::json::Path);
 llvm::json::Value toJSON(const CodeLens &);
