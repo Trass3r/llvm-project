@@ -18,6 +18,7 @@
 
 #include "llvm/Config/llvm-config.h"
 #include <optional>
+#include <utility>
 
 #ifdef _WIN32
 typedef unsigned long DWORD;
