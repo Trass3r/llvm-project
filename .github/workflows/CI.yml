@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: main
+
+jobs:
+  build-analyzer:
+    runs-on: ubuntu-24.04
+    #container: ubuntu:rolling
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ['Debug', 'Release']
+        stdlib: ['libstdc++', 'libc++']
+        modules: [true, false]
+    steps:
+    - uses: easimon/maximize-build-space@master
+      with:
+        remove-dotnet: true
+        remove-android: true
+        remove-haskell: true
+        remove-docker-images: true
+    - uses: actions/checkout@v4
+      with:
+        show-progress: false
+    - uses: Trass3r/setup-cpp@master
+    - name: prereqs
+      run: |
+        set -eux
+        #apt update && apt -qq install -y sudo git wget curl
+        sudo apt autoremove -y gcc-12
+        #sudo sed -i s/noble/oracular/ /etc/apt/sources.list
+        sudo apt update
+        sudo DEBIAN_FRONTEND=noninteractive apt -qq install -y g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache wine unzip
+        wget https://github.com/Viladoman/CompileScore/releases/latest/download/CompileScoreExtractor.zip
+        unzip CompileScoreExtractor.zip
+    - name: build ClangBuildAnalyzer
+      run: |
+        git clone --depth=1 https://github.com/aras-p/ClangBuildAnalyzer.git
+        cd ClangBuildAnalyzer
+        cmake -GNinja -DCMAKE_BUILD_TYPE=Release .
+        ninja
+    - name: build
+      env:
+        CC: clang
+        CXX: clang++
+        CXXFLAGS: -ftime-trace
+        LDFLAGS: -fuse-ld=lld -Wl,--time-trace -static-libgcc -static-libstdc++
+      run: |
+        set -eux
+        #sudo wget -nv -O /usr/include/c++/13/module.modulemap https://raw.githubusercontent.com/root-project/cling/master/include/cling/std.modulemap
+        sudo wget -nv -O /usr/include/c++/13/module.modulemap https://raw.githubusercontent.com/apple/swift/main/stdlib/public/Cxx/libstdcxx/libstdcxx.modulemap
+        sudo wget -nv -O /usr/include/c++/13/libstdcxx.h https://raw.githubusercontent.com/apple/swift/main/stdlib/public/Cxx/libstdcxx/libstdcxx.h
+        sudo sed -i '50i header "string_view"\
+          header "cmath"\
+          header "optional"\
+          header "variant"' /usr/include/c++/13/module.modulemap
+        sudo sed -i 's/header "cassert"/textual header "cassert"/' /usr/include/c++/13/module.modulemap
+        mkdir -p build && cd build
+        cmake ../llvm/ -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DLLVM_ENABLE_ASSERTIONS=OFF \
+              -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+              -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=ON -DCLANG_INCLUDE_TESTS=ON -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+              -DLLVM_ENABLE_ZLIB=OFF \
+              -DLLVM_ENABLE_LIBCXX=${{ matrix.stdlib == 'libc++' && 'ON' || 'OFF' }} \
+              -DLLVM_ENABLE_MODULES=${{ matrix.modules }} \
+              -DCMAKE_DISABLE_PRECOMPILE_HEADERS=${{ matrix.modules }} \
+              -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
+              -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_LLD=ON
+        ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
+        ninja -v -k0 llvm-tblgen clang-tblgen || touch .fail
+        find -type f -name '*.o' -exec du -ch {} + | grep total$
+    - name: analyze build
+      run: |
+        cd build
+        set -eux
+        ../ClangBuildAnalyzer/ClangBuildAnalyzer --stop . build.dat
+        echo -e '[counts]\nheader = 100\nheaderChain = 10\n[misc]\nonlyRootHeaders = false' > ClangBuildAnalyzer.ini
+        ../ClangBuildAnalyzer/ClangBuildAnalyzer --analyze build.dat
+        mkdir ~/.wine
+        wine ../ScoreDataExtractor.exe -clang -i .
+
+        git clone --depth=1 https://github.com/nico/ninjatracing.git
+        ninjatracing/ninjatracing .ninja_log > ninjatrace.json
+        ninjatracing/ninjatracing -e .ninja_log > ninjatrace.e.json
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.config }}-${{ matrix.stdlib }}-${{ matrix.modules }}-traces
+        path: build/**/*.json
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.config }}-${{ matrix.stdlib }}-${{ matrix.modules }}-scorefile
+        path: build/compileData*
+    - run: if [ -f build/.fail ]; then exit 1; fi
