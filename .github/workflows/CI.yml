@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  winbuild:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-latest, cc: cl, cxx: cl, config: Release, cflags: -D_HAS_EXCEPTIONS=0 -GR- -GS- -Gw, ldflags: "-OPT:REF -OPT:ICF"}
+          - {os: windows-latest, cc: clang-cl, cxx: clang-cl, config: Release, cflags: -D_HAS_EXCEPTIONS=0 -GR- -GS- -Gw, ldflags: "-OPT:REF -OPT:ICF"}
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        show-progress: false
+    - uses: Trass3r/setup-cpp@master
+    - run: |
+        choco upgrade -y --limit-output --no-progress ccache
+        ${{ contains(matrix.cxx, 'clang') }} && choco upgrade -y --limit-output --no-progress llvm
+        exit 0
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        max-size: 5G
+        variant: ccache
+        verbose: 2
+    - uses: ilammy/msvc-dev-cmd@v1
+    - env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+        CXXFLAGS: ${{ matrix.cflags }}
+        LDFLAGS: ${{ matrix.ldflags }}
+        CCACHE_NOCOMPRESS: 1
+        CCACHE_MAXFILES: 8000
+        CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_ctime,include_file_mtime
+        CCACHE_COMPILERCHECK: "%compiler% ${{ contains(matrix.cxx, 'clang') && '-clang:-dumpversion' || '' }}"
+        CCACHE_LOGFILE: ccache.log
+        #CCACHE_DEBUG: 1
+      run: |
+        set -eux
+        mkdir -p build && cd build
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DBUILD_SHARED_LIBS=ON -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+          -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
+          -DLLVM_USE_SYMLINKS=ON \
+          -DLLVM_CCACHE_BUILD=ON \
+          -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
+        ninja -v -k0 llvm-tblgen
+        ccache -x
+    - name: analyze ccache logs
+      run: |
+        cd build
+        find -name '*.ccache-log' | xargs grep -Ei '_miss| supported|found|too ' || true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: |
+          build/ccache.log
+          build/**/*.ccache-log
+          build/**/*.ccache-input-text
+    - name: create package
+      run: cd install && 7z a -snl "$GITHUB_WORKSPACE/clang.7z" *
+    - uses: actions/upload-artifact@v4
+      with:
+        name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
+        path: clang.7z
