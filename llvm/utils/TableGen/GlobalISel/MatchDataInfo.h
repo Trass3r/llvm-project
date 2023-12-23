@@ -15,6 +15,7 @@
 #ifndef LLVM_UTILS_MIRPATTERNS_MATCHDATAINFO_H
 #define LLVM_UTILS_MIRPATTERNS_MATCHDATAINFO_H
 
+#include "llvmtablegenglobalisel_export.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
@@ -72,7 +73,7 @@ public:
 /// This has a static lifetime and will outlive all the `MatchDataInfo` objects
 /// by design. It needs a static lifetime so the backends can emit variable
 /// declarations after processing all the inputs.
-extern StringMap<std::vector<std::string>> AllMatchDataVars;
+extern LLVMTABLEGENGLOBALISEL_EXPORT StringMap<std::vector<std::string>> AllMatchDataVars;
 
 /// Assign variable names to all MatchDatas used by a pattern. This must be
 /// called after all MatchData decls have been parsed for a given processing

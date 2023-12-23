@@ -14,6 +14,7 @@
 #ifndef LLVM_TABLEGEN_ERROR_H
 #define LLVM_TABLEGEN_ERROR_H
 
+#include "llvmtablegen_export.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Record.h"
 
@@ -45,8 +46,8 @@ void PrintError(const RecordVal *RecVal, const Twine &Msg);
 void CheckAssert(SMLoc Loc, Init *Condition, Init *Message);
 void dumpMessage(SMLoc Loc, Init *Message);
 
-extern SourceMgr SrcMgr;
-extern unsigned ErrorsPrinted;
+extern LLVMTABLEGEN_EXPORT SourceMgr SrcMgr;
+extern LLVMTABLEGEN_EXPORT unsigned ErrorsPrinted;
 
 } // end namespace llvm
 

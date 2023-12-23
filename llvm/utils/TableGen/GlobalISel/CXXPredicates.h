@@ -15,6 +15,7 @@
 #ifndef LLVM_UTILS_MIRPATTERNS_CXXPREDICATES_H
 #define LLVM_UTILS_MIRPATTERNS_CXXPREDICATES_H
 
+#include "llvmtablegenglobalisel_export.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/StringRef.h"
@@ -33,7 +34,7 @@ namespace gi {
 ///
 /// Note that CXXPattern trims C++ code, so the Code is already expected to be
 /// free of leading/trailing whitespace.
-class CXXPredicateCode {
+class LLVMTABLEGENGLOBALISEL_EXPORT CXXPredicateCode {
   using CXXPredicateCodePool =
       DenseMap<hash_code, std::unique_ptr<CXXPredicateCode>>;
   static CXXPredicateCodePool AllCXXMatchCode;

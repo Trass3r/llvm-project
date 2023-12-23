@@ -44,6 +44,7 @@
 #ifndef LLVM_ADT_HASHING_H
 #define LLVM_ADT_HASHING_H
 
+#include "llvmsupport_export.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/SwapByteOrder.h"
@@ -328,7 +329,7 @@ struct hash_state {
 /// This variable can be set using the \see llvm::set_fixed_execution_seed
 /// function. See that function for details. Do not, under any circumstances,
 /// set or read this variable.
-extern uint64_t fixed_seed_override;
+extern LLVMSUPPORT_EXPORT uint64_t fixed_seed_override;
 
 inline uint64_t get_execution_seed() {
   // FIXME: This needs to be a per-execution seed. This is just a placeholder

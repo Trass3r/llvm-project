@@ -3,6 +3,7 @@ include(LLVMDistributionSupport)
 include(LLVMProcessSources)
 include(LLVM-Config)
 include(DetermineGCCCompatible)
+include(GenerateExportHeader)
 
 function(llvm_update_compile_flags name)
   get_property(sources TARGET ${name} PROPERTY SOURCES)
@@ -744,6 +745,9 @@ function(llvm_add_library name)
       COMMAND touch ${LLVM_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${name}${CMAKE_STATIC_LIBRARY_SUFFIX}
       )
   endif()
+
+  generate_export_header(${name})
+  target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
 
 function(add_llvm_install_targets target)

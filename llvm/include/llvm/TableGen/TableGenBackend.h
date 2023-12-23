@@ -13,6 +13,7 @@
 #ifndef LLVM_TABLEGEN_TABLEGENBACKEND_H
 #define LLVM_TABLEGEN_TABLEGENBACKEND_H
 
+#include "llvmtablegen_export.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -30,7 +31,7 @@ struct OptCreatorT {
   static void *call();
 };
 
-extern ManagedStatic<cl::opt<FnT>, OptCreatorT> Action;
+extern LLVMTABLEGEN_EXPORT ManagedStatic<cl::opt<FnT>, OptCreatorT> Action;
 
 struct Opt {
   Opt(StringRef Name, FnT CB, StringRef Desc, bool ByDefault = false) {
