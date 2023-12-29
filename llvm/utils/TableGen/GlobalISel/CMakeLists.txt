@@ -18,3 +18,5 @@ target_include_directories(LLVMTableGenGlobalISel
   INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
   )
+
+target_compile_definitions(LLVMTableGenGlobalISel PRIVATE LLVMTABLEGENGLOBALISEL_STATIC_DEFINE)
