@@ -33,6 +33,11 @@ jobs:
         variant: ccache
         verbose: 2
     - uses: ilammy/msvc-dev-cmd@v1
+    - name: setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 3
+      with:
+        detached: true
     - env:
         CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
