@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: main
+
+jobs:
+  build-analyzer:
+    runs-on: ubuntu-24.04
+    #container: ubuntu:rolling
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ['Debug', 'Release']
+        stdlib: ['libstdc++', 'libc++']
+        modules: ['ON', 'OFF']
+    steps:
+    - uses: actions/checkout@v3
+    - uses: Trass3r/setup-cpp@master
+    - name: prereqs
+      run: |
+        set -eux
+        #apt update && apt -qq install -y sudo git wget curl zstd tmux
+        sudo apt autoremove -y gcc-9 gcc-10 gcc-11 gcc-12
+        sudo apt update
+        sudo DEBIAN_FRONTEND=noninteractive apt -qq -o=Dpkg::Use-Pty=0 install -y g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache unzip
+    - name: setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 3
+      with:
+        detached: true
+    - uses: hendrikmuhs/ccache-action@v1
+      with:
+        key: ${{ matrix.config }}-${{ matrix.stdlib }}-${{ matrix.modules }}
+        max-size: 4G
+        verbose: 2
+    - name: build
+      env:
+        CC: clang
+        CXX: clang++
+        CXXFLAGS: -fno-autolink
+        CMAKE_C_COMPILER_LAUNCHER: ccache
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        CCACHE_BASEDIR: ${{ github.workspace }}
+        CCACHE_NOCOMPRESS: 1 # cache action will also compress
+        CCACHE_SLOPPINESS: pch_defines,modules,time_macros
+        CCACHE_DEPEND: 1
+        #CCACHE_DEBUG: 1
+        CCACHE_LOGFILE: ccache.log
+      run: |
+        set -eux
+        sudo wget -nv -O /usr/include/c++/13/module.modulemap https://raw.githubusercontent.com/apple/swift/main/stdlib/public/Cxx/libstdcxx/libstdcxx.modulemap
+        sudo wget -nv -O /usr/include/c++/13/libstdcxx.h https://raw.githubusercontent.com/apple/swift/main/stdlib/public/Cxx/libstdcxx/libstdcxx.h
+        sudo sed -i '50i header "string_view"\
+          header "cmath"\
+          header "optional"\
+          header "variant"' /usr/include/c++/13/module.modulemap
+        sudo sed -i 's/header "cassert"/textual header "cassert"/' /usr/include/c++/13/module.modulemap
+        mkdir -p build && cd build
+        cmake ../llvm/ -G Ninja \
+              -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_FLAGS_DEBUG=-g0 -DLLVM_ENABLE_ASSERTIONS=OFF \
+              -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=../install -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+              -DLLVM_ENABLE_LIBCXX=${{ matrix.stdlib == 'libc++' && 'ON' || 'OFF' }} \
+              -DLLVM_ENABLE_MODULES=${{ matrix.modules }} \
+              -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
+              -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_LLD=ON
+        ninja -k0 clang-tblgen clang
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ccache-${{ matrix.config }}-${{ matrix.stdlib }}-${{ matrix.modules }}
+        path: |
+          build/ccache.log
+          build/**/*.ccache-*
