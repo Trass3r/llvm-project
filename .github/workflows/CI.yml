@@ -16,5 +16,6 @@ jobs:
         lscpu
         df -h
         mount
-        ls -la /mnt/**
+        ls -la /mnt/
         cat /mnt/DATALOSS_WARNING_README.txt
+        free -lm
