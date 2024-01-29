@@ -10,9 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: step
       run: |
         set -eux
         lscpu
         df -h
+        mount
+        ls -la /mnt/**
