@@ -12,8 +12,9 @@ jobs:
     steps:
     - name: step
       run: |
-        set -eux
+        set -ux
         lscpu
         df -h
         mount
         ls -la /mnt/**
+        cat /mnt/DATALOSS_WARNING_README.txt
