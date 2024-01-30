@@ -14,7 +14,7 @@ on:
 jobs:
   build-analyzer:
     runs-on: ubuntu-latest
-    container: ubuntu:rolling
+    #container: ubuntu:rolling
     strategy:
       fail-fast: false
       matrix:
@@ -29,8 +29,9 @@ jobs:
     - name: prereqs
       run: |
         set -eux
-        apt update && apt -qq install -y sudo git wget curl
+        #apt update && apt -qq install -y sudo git wget curl
         sudo apt autoremove -y gcc-9 gcc-10 gcc-11 gcc-12
+        sudo sed -i s/jammy/mantic/ /etc/apt/sources.list
         sudo apt update
         sudo DEBIAN_FRONTEND=noninteractive apt -qq install -y g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache wine unzip
         wget https://github.com/Viladoman/CompileScore/releases/latest/download/CompileScoreExtractor.zip
