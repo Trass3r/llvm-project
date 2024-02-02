@@ -46,6 +46,12 @@ jobs:
         time sudo rm -rf /usr/local/lib/android
         time docker system prune -a -f --volumes
         df -h
+    - uses: easimon/maximize-build-space@master
+      with:
+        remove-dotnet: true
+        remove-android: true
+        remove-haskell: true
+        remove-docker-images: true
     - name: Install prerequisites
       run: |
         set -eux
