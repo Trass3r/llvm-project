@@ -69,7 +69,7 @@ jobs:
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON
         ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
-        ninja -v -k0 clang || touch .fail
+        ninja -v -k0 llvm-tblgen || touch .fail
         find -type f -name '*.o' -exec du -ch {} + | grep total$
     - name: analyze build
       run: |
