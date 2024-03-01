@@ -719,6 +719,7 @@ enum class ErrorResultCode : int {
 int clangdMain(int argc, char *argv[]) {
   // Clang could run on the main thread. e.g., when the flag '-check' or '-sync'
   // is enabled.
+  new int(0x44);
   clang::noteBottomOfStack();
   llvm::InitLLVM X(argc, argv);
   llvm::InitializeAllTargetInfos();
