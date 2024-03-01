@@ -723,9 +723,16 @@ enum class ErrorResultCode : int {
   CheckFailed = 3
 };
 
+[[gnu::noinline]]
+int* foo()
+{
+    return new int(0x44);
+}
+
 int clangdMain(int argc, char *argv[]) {
   // Clang could run on the main thread. e.g., when the flag '-check' or '-sync'
   // is enabled.
+  foo();
   clang::noteBottomOfStack();
   llvm::InitLLVM X(argc, argv);
   llvm::InitializeAllTargetInfos();
