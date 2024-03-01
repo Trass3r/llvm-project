@@ -86,8 +86,8 @@ jobs:
       env:
         CC: ${{ matrix.cc }}
         CXX: ${{ matrix.cxx }}
-        CXXFLAGS: ${{ matrix.cflags }}
-        LDFLAGS: ${{ matrix.cflags }} ${{ matrix.ldflags }} -static-libgcc -static-libstdc++
+        CXXFLAGS: ${{ matrix.cflags }} -fno-omit-frame-pointer -g1
+        LDFLAGS: ${{ matrix.cflags }} ${{ matrix.ldflags }} -fsanitize=leak -static-libgcc -static-libstdc++
         CMAKE_C_COMPILER_LAUNCHER: ccache
         CMAKE_CXX_COMPILER_LAUNCHER: ccache
         CCACHE_BASEDIR: ${{ github.workspace }}
