@@ -20,7 +20,7 @@ jobs:
       matrix:
         config: ['Debug', 'Release']
         stdlib: ['libstdc++', 'libc++']
-        modules: ['ON', 'OFF']
+        modules: [true, false]
     steps:
     - uses: easimon/maximize-build-space@master
       with:
@@ -72,6 +72,7 @@ jobs:
               -DLLVM_ENABLE_ZLIB=OFF \
               -DLLVM_ENABLE_LIBCXX=${{ matrix.stdlib == 'libc++' && 'ON' || 'OFF' }} \
               -DLLVM_ENABLE_MODULES=${{ matrix.modules }} \
+              -DCMAKE_DISABLE_PRECOMPILE_HEADERS=${{ matrix.modules }} \
               -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
               -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_LLD=ON
         ../ClangBuildAnalyzer/ClangBuildAnalyzer --start .
