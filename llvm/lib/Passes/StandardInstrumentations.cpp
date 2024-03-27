@@ -221,7 +221,7 @@ std::string getIRName(Any IR) {
     return M->getModuleIdentifier();
 
   if (const auto *F = unwrapIR<Function>(IR))
-    return demangle(F->getName().str());
+    return F->getName().str();
 
   if (const auto *C = unwrapIR<LazyCallGraph::SCC>(IR))
     return C->getName();
@@ -1496,7 +1496,7 @@ void TimeProfilingPassesHandler::registerCallbacks(
 }
 
 void TimeProfilingPassesHandler::runBeforePass(StringRef PassID, Any IR) {
-  timeTraceProfilerBegin(PassID, getIRName(IR));
+  timeTraceProfilerBegin(PassID, demangle(getIRName(IR)));
 }
 
 void TimeProfilingPassesHandler::runAfterPass() { timeTraceProfilerEnd(); }
