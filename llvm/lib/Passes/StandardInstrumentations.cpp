@@ -236,8 +236,8 @@ void printIR(raw_ostream &OS, const MachineFunction *MF) {
 }
 
 std::string getIRName(Any IR) {
-  if (const auto *M = unwrapIR<Module>(IR))
-    return M->getModuleIdentifier();
+  if (unwrapIR<Module>(IR))
+    return "[module]";
 
   if (const auto *F = unwrapIR<Function>(IR))
     return F->getName().str();
