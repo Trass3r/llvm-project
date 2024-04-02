@@ -1505,17 +1505,17 @@ void TimeProfilingPassesHandler::runBeforePass(StringRef PassID, Any IR) {
 
     if (const auto *C = unwrapIR<LazyCallGraph::SCC>(IR)) {
       llvm::outs() << C->getName();
-      return (C->getName());
+      return C->getName();
     }
 
     if (const auto *L = unwrapIR<Loop>(IR)) {
       llvm::outs() << L->getName();
-      return (L->getName());
+      return L->getName().str();
     }
 
     if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
       llvm::outs() << MF->getName();
-      return MF->getName();
+      return MF->getName().str();
     }
 
     llvm_unreachable("Unknown wrapped IR type");
