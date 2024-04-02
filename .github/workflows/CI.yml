@@ -109,7 +109,7 @@ jobs:
               -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
         ninja $(ninja -t targets all | grep -F cmake_pch | sed 's/:.*//') # build PCH targets
         ninja -k0 llvm-tblgen clang-tblgen
-        ninja install-clangd
+        ninja install-clangd install-clang
         #ninja ClangdTests FileCheck
         df -h
         #sudo bash -c 'find ../install -type f \( -executable -o -name \*.so\* \) -exec file --mime-type {} \; | egrep "x-(executable|sharedlib)" |  sed -r "s/(.+):[^:]+$/\1/" | xargs -t -n1 -P8 dwp -v -e' || true
