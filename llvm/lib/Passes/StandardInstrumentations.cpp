@@ -1580,7 +1580,31 @@ void TimeProfilingPassesHandler::registerCallbacks(
 }
 
 void TimeProfilingPassesHandler::runBeforePass(StringRef PassID, Any IR) {
-  timeTraceProfilerBegin(PassID, demangle(getIRName(IR)));
+  auto detail = [](const Any& IR) -> std::string {
+    if (unwrapIR<Module>(IR))
+      return "[module]";
+
+    if (const auto *F = unwrapIR<Function>(IR))
+      return demangle(F->getName());
+
+    if (const auto *C = unwrapIR<LazyCallGraph::SCC>(IR)) {
+      llvm::outs() << C->getName();
+      return C->getName();
+    }
+
+    if (const auto *L = unwrapIR<Loop>(IR)) {
+      llvm::outs() << L->getName();
+      return L->getName().str();
+    }
+
+    if (const auto *MF = unwrapIR<MachineFunction>(IR)) {
+      llvm::outs() << MF->getName();
+      return MF->getName().str();
+    }
+
+    llvm_unreachable("Unknown wrapped IR type");
+  }(IR);
+  timeTraceProfilerBegin(PassID, detail);
 }
 
 void TimeProfilingPassesHandler::runAfterPass() { timeTraceProfilerEnd(); }
