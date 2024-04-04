@@ -22,6 +22,8 @@ if (DEFINED LLVM_HAVE_TF_AOT OR LLVM_HAVE_TFLITE)
   endif()
 endif()
 
+add_compile_options(-g)
+
 add_llvm_component_library(LLVMCodeGen
   AggressiveAntiDepBreaker.cpp
   AllocationOrder.cpp
@@ -277,7 +279,6 @@ add_llvm_component_library(LLVMCodeGen
   TargetParser
   TransformUtils
   )
-target_compile_options(LLVMCodeGen -g)
 
 add_subdirectory(SelectionDAG)
 add_subdirectory(AsmPrinter)

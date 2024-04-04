@@ -1,3 +1,5 @@
+add_compile_options(-g)
+
 add_llvm_component_library(LLVMCore
   AbstractCallSite.cpp
   AsmWriter.cpp
@@ -87,4 +89,3 @@ add_llvm_component_library(LLVMCore
   Support
   TargetParser
   )
-target_compile_options(LLVMCore -g)
