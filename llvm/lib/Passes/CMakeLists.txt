@@ -34,3 +34,4 @@ add_llvm_component_library(LLVMPasses
   Vectorize
   Instrumentation
   )
+target_compile_options(LLVMPasses -g)

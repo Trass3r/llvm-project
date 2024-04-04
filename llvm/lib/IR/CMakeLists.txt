@@ -87,3 +87,4 @@ add_llvm_component_library(LLVMCore
   Support
   TargetParser
   )
+target_compile_options(LLVMCore -g)

@@ -277,6 +277,7 @@ add_llvm_component_library(LLVMCodeGen
   TargetParser
   TransformUtils
   )
+target_compile_options(LLVMCodeGen -g)
 
 add_subdirectory(SelectionDAG)
 add_subdirectory(AsmPrinter)

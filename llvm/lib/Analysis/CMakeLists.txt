@@ -161,3 +161,4 @@ add_llvm_component_library(LLVMAnalysis
   Support
   TargetParser
   )
+target_compile_options(LLVMAnalysis -g)
