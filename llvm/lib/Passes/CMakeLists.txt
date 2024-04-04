@@ -1,3 +1,5 @@
+add_compile_options(-g)
+
 add_llvm_component_library(LLVMPasses
   CodeGenPassBuilder.cpp
   OptimizationLevel.cpp
