@@ -11,7 +11,7 @@ add_llvm_component_library(LLVMDemangle
 
 )
 
-if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     list(APPEND CMAKE_CXX_COMPILE_OPTIONS_CREATE_PCH -Xclang -fno-pch-timestamp)
 endif()
 target_precompile_headers(LLVMDemangle PRIVATE $<$<COMPILE_LANGUAGE:CXX>:pch.h>)
