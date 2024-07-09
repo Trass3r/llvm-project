@@ -618,6 +618,9 @@ function(llvm_add_library name)
   if(NOT ${name} STREQUAL "LLVMDemangle" AND NOT ${name} STREQUAL "LLVMSupport" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
     message(STATUS "Reusing PCH for library ${name}")
     target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
+    # the pch.h is in the demangle dir
+    get_target_property(DEMANGLE_SOURCE_DIR LLVMDemangle SOURCE_DIR)
+    target_include_directories(${name} PRIVATE ${DEMANGLE_SOURCE_DIR})
   endif()
 
   if(ARG_COMPONENT_LIB)
@@ -1095,6 +1098,9 @@ macro(add_llvm_executable name)
   if(NOT "${sources}" MATCHES "\\.c(;|$)" AND NOT LLVM_REQUIRES_RTTI AND NOT LLVM_REQUIRES_EH)
     message(STATUS "Reusing PCH for executable ${name}")
     target_precompile_headers(${name} REUSE_FROM LLVMDemangle)
+    # the pch.h is in the demangle dir
+    get_target_property(DEMANGLE_SOURCE_DIR LLVMDemangle SOURCE_DIR)
+    target_include_directories(${name} PRIVATE ${DEMANGLE_SOURCE_DIR})
   endif()
 endmacro(add_llvm_executable name)
 
