@@ -96,6 +96,7 @@ jobs:
         CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_ctime,include_file_mtime
         CCACHE_COMPILERCHECK: '%compiler% -dumpversion'
         CCACHE_DEBUG: 1
+        CCACHE_DEBUGLEVEL: 1 # only logs
         CCACHE_LOGFILE: ccache.log
       run: |
         mkdir -p build && cd build
@@ -127,7 +128,7 @@ jobs:
     - name: analyze ccache logs
       run: |
         cd build
-        find -name '*.ccache-log' | xargs grep -Ei '_miss| supported|found|too ' || true
+        find -name '*.ccache-log' | xargs grep -Ei 'preprocessed_cache_miss| supported|found |failed |unknown |too hard|Result: [^cdlp]' || true
     - uses: actions/upload-artifact@v4
       with:
         name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
