@@ -108,10 +108,12 @@ jobs:
               -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF -DLLVM_INCLUDE_TESTS=ON -DCLANG_INCLUDE_TESTS=ON -DCLANG_INCLUDE_DOCS=OFF -DCLANG_ENABLE_ARCMT=OFF \
               -DCLANGD_ENABLE_REMOTE=OFF \
               -DLLVM_ENABLE_ZLIB=OFF \
-              -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> TDqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
+              -DCMAKE_CXX_ARCHIVE_CREATE='<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>' \
+              -DCMAKE_CXX_ARCHIVE_FINISH=: \
               -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_BINUTILS_INCDIR=/usr/include -DLLVM_ENABLE_UNWIND_TABLES=OFF ${{ matrix.cmake_args }} ../llvm/
         ninja $(ninja -t targets all | grep -F cmake_pch | sed 's/:.*//') # build PCH targets
         ninja -k0 llvm-tblgen clang-tblgen
+        ninja install-compiler-rt
         ninja install-clangd
         #ninja ClangdTests FileCheck
         df -h
