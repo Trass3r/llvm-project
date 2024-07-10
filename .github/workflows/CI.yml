@@ -47,7 +47,9 @@ jobs:
         time docker system prune -a -f --volumes
         df -h
     - uses: easimon/maximize-build-space@master
+      if: false
       with:
+        root-reserve-mb: 2048
         remove-dotnet: true
         remove-android: true
         remove-haskell: true
