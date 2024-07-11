@@ -29,7 +29,7 @@ jobs:
         # -Wsuggest-final-types really needs LTO
         include:
           - {os: ubuntu-latest, cc: gcc, cxx: g++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Off -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake, ldflags: -fuse-ld=lld -v -Xlinker --print-archive-stats=/dev/stdout -Xlinker --print-gc-sections}
-          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake, ldflags: -v -Xlinker --print-archive-stats=/dev/stdout -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --print-gc-sections -Xlinker --icf=safe -Xlinker --print-icf-sections}
+          - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake, ldflags: -shared-libsan -v -Xlinker --print-archive-stats=/dev/stdout -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --print-gc-sections -Xlinker --icf=safe -Xlinker --print-icf-sections}
     steps:
     #- run: apt update && apt install -y sudo git wget curl zstd
     - name: free up ~20GB on the runner
