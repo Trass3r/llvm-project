@@ -28,6 +28,7 @@ typedef PVOID HANDLE;
 #if LLVM_ENABLE_THREADS
 
 #include <thread>
+#include <utility>
 
 namespace llvm {
 
