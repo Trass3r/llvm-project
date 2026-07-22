@@ -32,13 +32,16 @@ jobs:
           - {os: ubuntu-latest, cc: clang, cxx: clang++, config: Release, cmake_args: -DLLVM_ENABLE_LTO=Thin -DLLVM_ENABLE_LLD=ON, cflags: -march=skylake, ldflags: -shared-libsan -v -Xlinker --print-archive-stats=/dev/stdout -Xlinker --thinlto-cache-policy=cache_size_bytes=2G -fuse-ld=lld -Xlinker --print-gc-sections -Xlinker --icf=safe -Xlinker --print-icf-sections}
     steps:
     #- run: apt update && apt install -y sudo git wget curl zstd
+    - uses: mxschmitt/action-tmate/detached@v3
+      with:
+        connect-timeout-seconds: 300
     - name: free up ~20GB on the runner
       run: |
         set -ux
         df -h
-        time sudo apt purge -qq firefox* snap* gcc-12 gcc-13 gcc-14 gfortran*
+        time sudo apt purge -qq firefox* snap* gcc-13 gcc-14 gfortran*
         time sudo apt purge -qq php* ruby*
-        time sudo apt purge -qq temurin* *-jre* '*llvm*' moby*
+        time sudo apt-get purge -qq temurin* *-jre* '*llvm*' moby*
         #time sudo apt purge -qq dotnet* microsoft* *sql* mono*
         time sudo apt purge -qq azure* # google*
         time sudo apt autoremove -y
