@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     #container: ubuntu:rolling
     strategy:
       fail-fast: false
@@ -60,29 +60,27 @@ jobs:
         #sudo sed -i s/noble/oracular/ /etc/apt/sources.list
         sudo apt update
         #sudo apt install -y lsb-release wget software-properties-common gnupg
-        #sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 18
+        #sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" llvm.sh 23
         sudo DEBIAN_FRONTEND=noninteractive apt install -y g++ binutils-dev cmake ninja-build clang lld libc++-dev libc++abi-dev python3 ccache
         sudo apt install -y libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
         df -h
         sudo apt clean
         df -h
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         show-progress: false
     - uses: Trass3r/setup-cpp@master
-    - uses: hendrikmuhs/ccache-action@v1
+    - uses: hendrikmuhs/ccache-action@main
       with:
         key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         max-size: 5G
         verbose: 2
-    - run: echo "TIMESTAMP=`date -u +'%Y%m%d-%H%M%S'`" >> $GITHUB_ENV
-      if: ${{ contains(matrix.cxx, 'clang') }}
     - name: restore thinlto cache
       if: ${{ contains(matrix.cxx, 'clang') }}
       uses: Trass3r/cache-action@main
       with:
         path: build/lto.cache
-        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ env.TIMESTAMP }}
+        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ github.sha }}
         restore-keys: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-
     - name: build
       env:
@@ -133,7 +131,7 @@ jobs:
       run: |
         cd build
         find -name '*.ccache-log' | xargs grep -Ei 'preprocessed_cache_miss| supported|found |failed |unknown |too hard|Result: [^cdlp]' || true
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         path: |
@@ -151,7 +149,7 @@ jobs:
         || true
     - name: create tarball
       run: cd install && tar cvapf "$GITHUB_WORKSPACE/clang.tar.xz" *
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         path: clang.tar.xz
@@ -168,7 +166,7 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         show-progress: false
     - uses: Trass3r/setup-cpp@master
@@ -176,18 +174,17 @@ jobs:
         choco upgrade -y --limit-output --no-progress ccache
         ${{ contains(matrix.cxx, 'clang') }} && choco upgrade -y --limit-output --no-progress llvm
         exit 0
-    - uses: hendrikmuhs/ccache-action@v1
+    - uses: hendrikmuhs/ccache-action@main
       with:
         key: ${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         max-size: 5G
         variant: ccache
         verbose: 2
-    - run: echo "TIMESTAMP=`date -u +'%Y%m%d-%H%M%S'`" >> $GITHUB_ENV
     - name: restore LTO cache
       uses: Trass3r/cache-action@main
       with:
         path: ${{ contains(matrix.cxx, 'clang') && 'build/lto.cache' || 'build/**/*.iobj' }}
-        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ env.TIMESTAMP }}
+        key: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-${{ github.sha }}
         restore-keys: lto-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}-
     - uses: ilammy/msvc-dev-cmd@v1
     - shell: cmd
@@ -227,7 +224,7 @@ jobs:
       run: |
         cd build
         find -name '*.ccache-log' | xargs grep -Ei '_miss| supported|found|too ' || true
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: ccache-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         path: |
@@ -236,7 +233,7 @@ jobs:
           build/**/*.ccache-input-text
     - name: create package
       run: cd install && 7z a -snl "$GITHUB_WORKSPACE/clang.7z" *
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: clang-${{ matrix.config }}-${{ matrix.os }}-${{ matrix.cc }}
         path: clang.7z
