@@ -36,11 +36,12 @@ jobs:
       run: |
         set -ux
         df -h
-        time sudo apt autoremove -qq firefox* snap* powershell* gcc-12 gfortran*
-        time sudo apt autoremove -qq php* ruby*
-        time sudo apt autoremove -qq temurin* *-jre* '*llvm*' moby*
-        #time sudo apt autoremove -qq dotnet* microsoft* *sql* mono*
-        time sudo apt autoremove -qq azure* # google*
+        time sudo apt purge -qq firefox* snap* powershell* gcc-12 gfortran*
+        time sudo apt purge -qq php* ruby*
+        time sudo apt purge -qq temurin* *-jre* '*llvm*' moby*
+        #time sudo apt purge -qq dotnet* microsoft* *sql* mono*
+        time sudo apt purge -qq azure* # google*
+        time sudo apt autoremove -y
         dpkg-query -Wf '${db:Status-Status} ${Installed-Size}\t${Package}\n' | sed -ne 's/^installed //p' | sort -n
         df -h
         time sudo rm -rf /usr/local/lib/android
