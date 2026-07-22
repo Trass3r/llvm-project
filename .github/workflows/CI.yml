@@ -36,7 +36,7 @@ jobs:
       run: |
         set -ux
         df -h
-        time sudo apt purge -qq firefox* snap* powershell* gcc-12 gfortran*
+        time sudo apt purge -qq firefox* snap* gcc-12 gcc-13 gcc-14 gfortran*
         time sudo apt purge -qq php* ruby*
         time sudo apt purge -qq temurin* *-jre* '*llvm*' moby*
         #time sudo apt purge -qq dotnet* microsoft* *sql* mono*
