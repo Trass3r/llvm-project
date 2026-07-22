@@ -34,14 +34,16 @@ jobs:
     #- run: apt update && apt install -y sudo git wget curl zstd
     - uses: mxschmitt/action-tmate/detached@v3
       with:
-        connect-timeout-seconds: 300
+        connect-timeout-seconds: 60
     - name: free up ~20GB on the runner
+      continue-on-error: true
       run: |
         set -ux
         df -h
         time sudo apt purge -qq firefox* snap* gcc-13 gcc-14 gfortran*
         time sudo apt purge -qq php* ruby*
         time sudo apt-get purge -qq temurin* *-jre* '*llvm*' moby*
+        time dpkg -l 'temurin*' '*-jre*' '*llvm*' 'moby*' 2>/dev/null | awk '/^ii/ {print $2"-"}' | xargs -r sudo apt-get purge -qq && sudo apt-get autoremove -y
         #time sudo apt purge -qq dotnet* microsoft* *sql* mono*
         time sudo apt purge -qq azure* # google*
         time sudo apt autoremove -y
